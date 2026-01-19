@@ -1,13 +1,14 @@
 .users-container {
   max-width: 800px;
-  margin: 2rem auto;
-  padding: 2rem;
+  margin: 0 auto;
+  padding: 0;
 }
 
 .users-container h2 {
   color: #333;
   margin-bottom: 2rem;
   text-align: center;
+  font-size: 1.75rem;
 }
 
 .error {

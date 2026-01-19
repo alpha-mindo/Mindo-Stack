@@ -1,16 +1,61 @@
 import React from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
+import Home from './pages/Home'
 import './App.css'
-import Users from './components/Users.jsx'
+
+// Protected Route wrapper
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth()
+  
+  if (loading) {
+    return <div className="loading-screen">Loading...</div>
+  }
+  
+  return user ? children : <Navigate to="/login" />
+}
+
+// Public Route wrapper (redirects to home if already logged in)
+function PublicRoute({ children }) {
+  const { user, loading } = useAuth()
+  
+  if (loading) {
+    return <div className="loading-screen">Loading...</div>
+  }
+  
+  return !user ? children : <Navigate to="/home" />
+}
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Welcome to Mindo Stack</h1>
-        <p>MERN Stack Application</p>
-      </header>
-      <Users />
-    </div>
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          } />
+          <Route path="/signup" element={
+            <PublicRoute>
+              <Signup />
+            </PublicRoute>
+          } />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:resetToken" element={<ResetPassword />} />
+          <Route path="/home" element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          } />
+          <Route path="/" element={<Navigate to="/home" />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
   )
 }
 
