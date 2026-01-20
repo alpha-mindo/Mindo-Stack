@@ -140,10 +140,7 @@ router.post('/forgot-password', async (req, res) => {
 
     try {
       // Send email using Resend
-      console.log('Attempting to send email to:', user.email);
-      console.log('Reset URL:', resetUrl);
-      
-      const emailResult = await resend.emails.send({
+      await resend.emails.send({
         from: 'Mindo-Stack <onboarding@resend.dev>', // You'll need to update this with your verified domain
         to: user.email,
         subject: 'Password Reset Request',
@@ -203,15 +200,11 @@ router.post('/forgot-password', async (req, res) => {
         `
       });
 
-      console.log('Email sent successfully:', emailResult);
-
       res.json({ 
         message: 'Password reset email sent successfully. Please check your inbox.' 
       });
     } catch (emailError) {
-      console.error('Email error details:', emailError);
-      console.error('Email error message:', emailError.message);
-      console.error('Email error response:', emailError.response?.data);
+      console.error('Email error:', emailError);
       
       // Reset the token fields if email fails
       user.resetPasswordToken = undefined;
