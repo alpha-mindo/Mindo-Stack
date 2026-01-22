@@ -22,6 +22,32 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: [6, 'Password must be at least 6 characters long']
   },
+  profilePicture: {
+    type: String,
+    default: null
+  },
+  bio: {
+    type: String,
+    maxlength: [500, 'Bio cannot exceed 500 characters'],
+    default: ''
+  },
+  phoneNumber: {
+    type: String,
+    default: null,
+    match: [/^[\d\s\-\+\(\)]+$/, 'Please enter a valid phone number']
+  },
+  clubsOwned: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Club'
+  }],
+  clubMemberships: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ClubMember'
+  }],
+  clubApplications: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ClubApplication'
+  }],
   createdAt: {
     type: Date,
     default: Date.now
