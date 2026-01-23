@@ -1,9 +1,35 @@
 const mongoose = require('mongoose');
 
+const replySchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  userName: {
+    type: String,
+    required: true
+  },
+  content: {
+    type: String,
+    required: [true, 'Reply content is required'],
+    trim: true,
+    maxlength: [500, 'Reply cannot exceed 500 characters']
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const commentSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+    required: true
+  },
+  userName: {
+    type: String,
     required: true
   },
   content: {
@@ -12,6 +38,7 @@ const commentSchema = new mongoose.Schema({
     trim: true,
     maxlength: [500, 'Comment cannot exceed 500 characters']
   },
+  replies: [replySchema],
   createdAt: {
     type: Date,
     default: Date.now
@@ -75,6 +102,12 @@ const clubAnnouncementSchema = new mongoose.Schema({
     trim: true,
     maxlength: [200, 'Title cannot exceed 200 characters']
   },
+  type: {
+    type: String,
+    enum: ['announcement', 'poll', 'forum'],
+    default: 'announcement',
+    required: true
+  },
   content: {
     type: String,
     required: [true, 'Announcement content is required'],
@@ -111,12 +144,63 @@ clubAnnouncementSchema.index({ clubId: 1, isPinned: -1, createdAt: -1 });
 clubAnnouncementSchema.statics.getClubAnnouncements = function(clubId) {
   return this.find({ clubId })
     .populate('comments.userId', 'username profilePicture')
+    .populate('comments.replies.userId', 'username profilePicture')
+    .sort({ isPinned: -1, createdAt: -1 });
+};
+
+// Static method to get forums only
+clubAnnouncementSchema.statics.getClubForums = function(clubId) {
+  return this.find({ clubId, type: 'forum' })
+    .populate('comments.userId', 'username profilePicture')
+    .populate('comments.replies.userId', 'username profilePicture')
+    .sort({ isPinned: -1, updatedAt: -1 }); // Forums sorted by recent activity
+};
+
+// Static method to get announcements and polls only (exclude forums)
+clubAnnouncementSchema.statics.getClubAnnouncementsOnly = function(clubId) {
+  return this.find({ clubId, type: { $in: ['announcement', 'poll'] } })
+    .populate('comments.userId', 'username profilePicture')
+    .populate('comments.replies.userId', 'username profilePicture')
     .sort({ isPinned: -1, createdAt: -1 });
 };
 
 // Method to add comment
-clubAnnouncementSchema.methods.addComment = function(userId, content) {
-  this.comments.push({ userId, content });
+clubAnnouncementSchema.methods.addComment = function(userId, userName, content) {
+  this.comments.push({ userId, userName, content });
+  return this.save();
+};
+
+// Method to add reply to a comment (forum-style threading)
+clubAnnouncementSchema.methods.addReply = function(commentId, userId, userName, content) {
+  const comment = this.comments.id(commentId);
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+  comment.replies.push({ userId, userName, content });
+  return this.save();
+};
+
+// Method to delete comment
+clubAnnouncementSchema.methods.deleteComment = function(commentId) {
+  const comment = this.comments.id(commentId);
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+  comment.remove();
+  return this.save();
+};
+
+// Method to delete reply
+clubAnnouncementSchema.methods.deleteReply = function(commentId, replyId) {
+  const comment = this.comments.id(commentId);
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+  const reply = comment.replies.id(replyId);
+  if (!reply) {
+    throw new Error('Reply not found');
+  }
+  reply.remove();
   return this.save();
 };
 
