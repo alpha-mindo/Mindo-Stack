@@ -6,6 +6,7 @@ import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Home from './pages/Home'
+import Status from './pages/Status'
 import './App.css'
 
 // Protected Route wrapper
@@ -30,6 +31,25 @@ function PublicRoute({ children }) {
   return !user ? children : <Navigate to="/home" />
 }
 
+// Admin Route wrapper (only accessible to admins)
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth()
+  
+  if (loading) {
+    return <div className="loading-screen">Loading...</div>
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" />
+  }
+  
+  if (!user.isAdmin) {
+    return <Navigate to="/home" />
+  }
+  
+  return children
+}
+
 function App() {
   return (
     <Router>
@@ -47,6 +67,11 @@ function App() {
           } />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:resetToken" element={<ResetPassword />} />
+          <Route path="/api" element={
+            <AdminRoute>
+              <Status />
+            </AdminRoute>
+          } />
           <Route path="/home" element={
             <ProtectedRoute>
               <Home />

@@ -47,7 +47,7 @@ router.post('/signup', async (req, res) => {
 
     // Create JWT token
     const token = jwt.sign(
-      { userId: user._id, username: user.username },
+      { userId: user._id, username: user.username, isAdmin: user.isAdmin },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -60,6 +60,13 @@ router.post('/signup', async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        profilePicture: user.profilePicture,
+        bio: user.bio,
+        phoneNumber: user.phoneNumber,
+        isAdmin: user.isAdmin,
+        clubsOwned: user.clubsOwned,
+        clubMemberships: user.clubMemberships,
+        clubApplications: user.clubApplications,
         createdAt: user.createdAt
       }
     });
@@ -95,7 +102,7 @@ router.post('/login', async (req, res) => {
 
     // Create JWT token
     const token = jwt.sign(
-      { userId: user._id, username: user.username },
+      { userId: user._id, username: user.username, isAdmin: user.isAdmin },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -107,6 +114,13 @@ router.post('/login', async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        profilePicture: user.profilePicture,
+        bio: user.bio,
+        phoneNumber: user.phoneNumber,
+        isAdmin: user.isAdmin,
+        clubsOwned: user.clubsOwned,
+        clubMemberships: user.clubMemberships,
+        clubApplications: user.clubApplications,
         createdAt: user.createdAt
       }
     });
@@ -262,7 +276,7 @@ router.post('/reset-password/:resetToken', async (req, res) => {
 
     // Create new JWT token
     const token = jwt.sign(
-      { userId: user._id, username: user.username },
+      { userId: user._id, username: user.username, isAdmin: user.isAdmin },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -274,6 +288,13 @@ router.post('/reset-password/:resetToken', async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        profilePicture: user.profilePicture,
+        bio: user.bio,
+        phoneNumber: user.phoneNumber,
+        isAdmin: user.isAdmin,
+        clubsOwned: user.clubsOwned,
+        clubMemberships: user.clubMemberships,
+        clubApplications: user.clubApplications,
         createdAt: user.createdAt
       }
     });
