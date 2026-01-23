@@ -29,8 +29,39 @@ const clubApplicationSchema = new mongoose.Schema({
   }],
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'interview-scheduled', 'interview-completed', 'approved', 'rejected'],
     default: 'pending'
+  },
+  interview: {
+    scheduled: {
+      type: Boolean,
+      default: false
+    },
+    date: {
+      type: Date
+    },
+    location: {
+      type: String,
+      trim: true,
+      maxlength: [300, 'Location cannot exceed 300 characters']
+    },
+    type: {
+      type: String,
+      enum: ['in-person', 'online', 'phone'],
+      default: 'in-person'
+    },
+    meetingLink: {
+      type: String,
+      trim: true
+    },
+    notes: {
+      type: String,
+      maxlength: [500, 'Interview notes cannot exceed 500 characters']
+    },
+    completed: {
+      type: Boolean,
+      default: false
+    }
   },
   appliedAt: {
     type: Date,
@@ -73,8 +104,55 @@ clubApplicationSchema.statics.getUserApplications = function(userId) {
     .sort({ appliedAt: -1 });
 };
 
+// Method to schedule interview
+clubApplicationSchema.methods.scheduleInterview = async function(interviewData) {
+  if (this.status !== 'pending') {
+    throw new Error('Can only schedule interview for pending applications');
+  }
+  
+  this.status = 'interview-scheduled';
+  this.interview = {
+    scheduled: true,
+    date: interviewData.date,
+    location: interviewData.location,
+    type: interviewData.type || 'in-person',
+    meetingLink: interviewData.meetingLink,
+    notes: interviewData.notes
+  };
+  
+  await this.save();
+  
+  // Update user's clubApplications
+  const User = mongoose.model('User');
+  await User.findByIdAndUpdate(this.userId, {
+    $addToSet: { clubApplications: this._id }
+  });
+  
+  return this;
+};
+
+// Method to mark interview as completed
+clubApplicationSchema.methods.completeInterview = async function(notes) {
+  if (this.status !== 'interview-scheduled') {
+    throw new Error('Interview must be scheduled first');
+  }
+  
+  this.status = 'interview-completed';
+  this.interview.completed = true;
+  if (notes) {
+    this.interview.notes = notes;
+  }
+  
+  return this.save();
+};
+
 // Method to approve application
 clubApplicationSchema.methods.approve = async function(reviewerId) {
+  // Can approve from interview-completed or pending (skip interview)
+  if (!['pending', 'interview-completed'].includes(this.status)) {
+    throw new Error('Can only approve pending or interview-completed applications');
+  }
+  
   this.status = 'approved';
   this.reviewedAt = Date.now();
   this.reviewedBy = reviewerId;
@@ -100,6 +178,11 @@ clubApplicationSchema.methods.approve = async function(reviewerId) {
   await Club.findByIdAndUpdate(this.clubId, {
     $inc: { memberCount: 1 }
   });
+  
+  // Can reject at any stage
+  if (this.status === 'approved') {
+    throw new Error('Cannot reject an already approved application');
+  }
   
   return newMember;
 };
