@@ -26,6 +26,9 @@ app.get('/', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/clubs', require('./routes/clubs'));
+app.use('/api/applications', require('./routes/applications'));
+app.use('/api/clubs/:clubId/members', require('./routes/members'));
+app.use('/api/invitations', require('./routes/invitations'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

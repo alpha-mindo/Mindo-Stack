@@ -18,6 +18,51 @@ const commentSchema = new mongoose.Schema({
   }
 });
 
+const pollOptionSchema = new mongoose.Schema({
+  text: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: [100, 'Poll option cannot exceed 100 characters']
+  },
+  votes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  voteCount: {
+    type: Number,
+    default: 0
+  }
+});
+
+const pollSchema = new mongoose.Schema({
+  question: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: [200, 'Poll question cannot exceed 200 characters']
+  },
+  options: [pollOptionSchema],
+  settings: {
+    showVoteCount: {
+      type: Boolean,
+      default: true
+    },
+    allowMultipleChoices: {
+      type: Boolean,
+      default: false
+    },
+    endDate: {
+      type: Date,
+      default: null // null = no end date
+    }
+  },
+  totalVotes: {
+    type: Number,
+    default: 0
+  }
+});
+
 const clubAnnouncementSchema = new mongoose.Schema({
   clubId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -49,6 +94,10 @@ const clubAnnouncementSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  poll: {
+    type: pollSchema,
+    default: null
+  },
   comments: [commentSchema]
 }, {
   timestamps: true
@@ -75,6 +124,100 @@ clubAnnouncementSchema.methods.addComment = function(userId, content) {
 clubAnnouncementSchema.methods.togglePin = function() {
   this.isPinned = !this.isPinned;
   return this.save();
+};
+
+// Method to vote on poll
+clubAnnouncementSchema.methods.voteOnPoll = async function(userId, optionIndex) {
+  if (!this.poll) {
+    throw new Error('This announcement does not have a poll');
+  }
+
+  // Check if poll has ended
+  if (this.poll.settings.endDate && new Date() > this.poll.settings.endDate) {
+    throw new Error('This poll has ended');
+  }
+
+  // Check if user has already voted
+  const hasVoted = this.poll.options.some(option => 
+    option.votes.some(vote => vote.toString() === userId.toString())
+  );
+
+  if (hasVoted && !this.poll.settings.allowMultipleChoices) {
+    throw new Error('You have already voted on this poll');
+  }
+
+  // Validate option index
+  if (optionIndex < 0 || optionIndex >= this.poll.options.length) {
+    throw new Error('Invalid poll option');
+  }
+
+  // Remove previous vote if changing vote (only for single choice polls)
+  if (hasVoted && !this.poll.settings.allowMultipleChoices) {
+    this.poll.options.forEach(option => {
+      const voteIndex = option.votes.findIndex(vote => vote.toString() === userId.toString());
+      if (voteIndex !== -1) {
+        option.votes.splice(voteIndex, 1);
+        option.voteCount--;
+        this.poll.totalVotes--;
+      }
+    });
+  }
+
+  // Add vote
+  this.poll.options[optionIndex].votes.push(userId);
+  this.poll.options[optionIndex].voteCount++;
+  this.poll.totalVotes++;
+
+  return this.save();
+};
+
+// Method to remove vote from poll
+clubAnnouncementSchema.methods.removeVoteFromPoll = async function(userId, optionIndex) {
+  if (!this.poll) {
+    throw new Error('This announcement does not have a poll');
+  }
+
+  // Validate option index
+  if (optionIndex < 0 || optionIndex >= this.poll.options.length) {
+    throw new Error('Invalid poll option');
+  }
+
+  const option = this.poll.options[optionIndex];
+  const voteIndex = option.votes.findIndex(vote => vote.toString() === userId.toString());
+
+  if (voteIndex === -1) {
+    throw new Error('You have not voted for this option');
+  }
+
+  // Remove vote
+  option.votes.splice(voteIndex, 1);
+  option.voteCount--;
+  this.poll.totalVotes--;
+
+  return this.save();
+};
+
+// Method to check if user voted on poll
+clubAnnouncementSchema.methods.hasUserVoted = function(userId) {
+  if (!this.poll) return false;
+
+  return this.poll.options.some(option => 
+    option.votes.some(vote => vote.toString() === userId.toString())
+  );
+};
+
+// Method to get user's votes on poll
+clubAnnouncementSchema.methods.getUserVotes = function(userId) {
+  if (!this.poll) return [];
+
+  const votedOptions = [];
+  this.poll.options.forEach((option, index) => {
+    if (option.votes.some(vote => vote.toString() === userId.toString())) {
+      votedOptions.push(index);
+    }
+  });
+
+  return votedOptions;
 };
 
 module.exports = mongoose.model('ClubAnnouncement', clubAnnouncementSchema);
