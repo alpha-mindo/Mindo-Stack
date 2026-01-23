@@ -50,6 +50,7 @@ const customRoleSchema = new mongoose.Schema({
       'suspend_members',
       'approve_applications',
       'view_applications',
+      'interview_applicants',
       'manage_violations',
       'view_members',
       'view_club',
