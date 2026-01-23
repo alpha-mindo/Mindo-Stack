@@ -90,6 +90,77 @@ const pollSchema = new mongoose.Schema({
   }
 });
 
+const formFieldSchema = new mongoose.Schema({
+  label: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: [200, 'Field label cannot exceed 200 characters']
+  },
+  type: {
+    type: String,
+    enum: ['text', 'textarea', 'number', 'date', 'email', 'select', 'checkbox', 'radio'],
+    required: true
+  },
+  options: [{
+    type: String,
+    trim: true
+  }], // For select, checkbox, radio types
+  required: {
+    type: Boolean,
+    default: false
+  },
+  placeholder: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Placeholder cannot exceed 100 characters']
+  }
+});
+
+const formResponseSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  userName: {
+    type: String,
+    required: true
+  },
+  responses: [{
+    fieldLabel: String,
+    value: mongoose.Schema.Types.Mixed // Can be string, number, array, etc.
+  }],
+  submittedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const formSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: [200, 'Form title cannot exceed 200 characters']
+  },
+  description: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Form description cannot exceed 500 characters']
+  },
+  fields: [formFieldSchema],
+  allowMultipleSubmissions: {
+    type: Boolean,
+    default: false
+  },
+  deadline: {
+    type: Date,
+    default: null // null = no deadline
+  },
+  responses: [formResponseSchema]
+});
+
 const clubAnnouncementSchema = new mongoose.Schema({
   clubId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -104,7 +175,7 @@ const clubAnnouncementSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['announcement', 'poll', 'forum'],
+    enum: ['announcement', 'poll', 'form'],
     default: 'announcement',
     required: true
   },
@@ -131,6 +202,10 @@ const clubAnnouncementSchema = new mongoose.Schema({
     type: pollSchema,
     default: null
   },
+  form: {
+    type: formSchema,
+    default: null
+  },
   comments: [commentSchema]
 }, {
   timestamps: true
@@ -143,22 +218,6 @@ clubAnnouncementSchema.index({ clubId: 1, isPinned: -1, createdAt: -1 });
 // Static method to get club announcements (pinned first)
 clubAnnouncementSchema.statics.getClubAnnouncements = function(clubId) {
   return this.find({ clubId })
-    .populate('comments.userId', 'username profilePicture')
-    .populate('comments.replies.userId', 'username profilePicture')
-    .sort({ isPinned: -1, createdAt: -1 });
-};
-
-// Static method to get forums only
-clubAnnouncementSchema.statics.getClubForums = function(clubId) {
-  return this.find({ clubId, type: 'forum' })
-    .populate('comments.userId', 'username profilePicture')
-    .populate('comments.replies.userId', 'username profilePicture')
-    .sort({ isPinned: -1, updatedAt: -1 }); // Forums sorted by recent activity
-};
-
-// Static method to get announcements and polls only (exclude forums)
-clubAnnouncementSchema.statics.getClubAnnouncementsOnly = function(clubId) {
-  return this.find({ clubId, type: { $in: ['announcement', 'poll'] } })
     .populate('comments.userId', 'username profilePicture')
     .populate('comments.replies.userId', 'username profilePicture')
     .sort({ isPinned: -1, createdAt: -1 });
@@ -202,6 +261,95 @@ clubAnnouncementSchema.methods.deleteReply = function(commentId, replyId) {
   }
   reply.remove();
   return this.save();
+};
+
+// Method to submit form response
+clubAnnouncementSchema.methods.submitFormResponse = async function(userId, userName, responses) {
+  if (!this.form) {
+    throw new Error('This announcement does not have a form');
+  }
+
+  // Check if deadline has passed
+  if (this.form.deadline && new Date() > this.form.deadline) {
+    throw new Error('The form deadline has passed');
+  }
+
+  // Check if user has already submitted (if multiple submissions not allowed)
+  if (!this.form.allowMultipleSubmissions) {
+    const existingResponse = this.form.responses.find(
+      r => r.userId.toString() === userId.toString()
+    );
+    if (existingResponse) {
+      throw new Error('You have already submitted this form');
+    }
+  }
+
+  // Validate required fields
+  for (const field of this.form.fields) {
+    if (field.required) {
+      const response = responses.find(r => r.fieldLabel === field.label);
+      if (!response || !response.value) {
+        throw new Error(`Field "${field.label}" is required`);
+      }
+    }
+  }
+
+  // Add response
+  this.form.responses.push({ userId, userName, responses });
+  return this.save();
+};
+
+// Method to update form response
+clubAnnouncementSchema.methods.updateFormResponse = async function(userId, responses) {
+  if (!this.form) {
+    throw new Error('This announcement does not have a form');
+  }
+
+  const existingResponse = this.form.responses.find(
+    r => r.userId.toString() === userId.toString()
+  );
+
+  if (!existingResponse) {
+    throw new Error('No existing response found to update');
+  }
+
+  // Validate required fields
+  for (const field of this.form.fields) {
+    if (field.required) {
+      const response = responses.find(r => r.fieldLabel === field.label);
+      if (!response || !response.value) {
+        throw new Error(`Field "${field.label}" is required`);
+      }
+    }
+  }
+
+  existingResponse.responses = responses;
+  existingResponse.submittedAt = new Date();
+  return this.save();
+};
+
+// Method to delete form response (by admin or user)
+clubAnnouncementSchema.methods.deleteFormResponse = function(responseId) {
+  if (!this.form) {
+    throw new Error('This announcement does not have a form');
+  }
+
+  const response = this.form.responses.id(responseId);
+  if (!response) {
+    throw new Error('Response not found');
+  }
+
+  response.remove();
+  return this.save();
+};
+
+// Method to get user's form response
+clubAnnouncementSchema.methods.getUserFormResponse = function(userId) {
+  if (!this.form) return null;
+
+  return this.form.responses.find(
+    r => r.userId.toString() === userId.toString()
+  );
 };
 
 // Method to pin/unpin announcement
