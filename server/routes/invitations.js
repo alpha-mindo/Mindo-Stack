@@ -3,6 +3,7 @@ const router = express.Router();
 const ClubInvitation = require('../models/ClubInvitation');
 const Club = require('../models/Club');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const { authMiddleware } = require('../middleware/auth');
 const { checkPermission } = require('../middleware/clubAuth');
 const { validateObjectId, validateUserExists } = require('../middleware/validators');
@@ -97,6 +98,16 @@ router.post(
         .populate('clubId', 'name logo category')
         .populate('userId', 'username email')
         .populate('invitedBy', 'username');
+
+      // Notify the invited user
+      await Notification.createNotification({
+        recipient: userId,
+        type: 'club_invitation',
+        title: 'You received a club invitation',
+        message: `${club.name} has invited you to join as ${role}`,
+        relatedClub: req.params.clubId,
+        priority: 'high'
+      });
 
       res.status(201).json({
         success: true,
@@ -235,6 +246,25 @@ router.put(
       }
 
       await invitation.accept();
+
+      // Notify president and admins
+      const clubAdmins = await ClubMember.find({
+        clubId: invitation.clubId,
+        status: 'active',
+        role: { $in: ['president', 'Admin'] }
+      }).select('userId');
+
+      const notificationPromises = clubAdmins.map(admin =>
+        Notification.createNotification({
+          recipient: admin.userId,
+          type: 'system',
+          title: 'New member joined',
+          message: `${req.user.username} has accepted the invitation and joined ${invitation.clubId.name}`,
+          relatedClub: invitation.clubId,
+          priority: 'low'
+        })
+      );
+      await Promise.all(notificationPromises);
 
       res.json({
         success: true,

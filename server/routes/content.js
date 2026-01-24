@@ -3,6 +3,7 @@ const router = express.Router({ mergeParams: true }); // mergeParams to access :
 const ClubContent = require('../models/ClubContent');
 const Club = require('../models/Club');
 const ClubMember = require('../models/ClubMember');
+const Notification = require('../models/Notification');
 const { authMiddleware } = require('../middleware/auth');
 
 // Middleware to check if user is a club member
@@ -86,6 +87,35 @@ router.post('/', checkPermission('manage_content'), async (req, res) => {
 
     const content = new ClubContent(contentData);
     await content.save();
+
+    // Notify members who have access to this content
+    const accessRoles = {
+      'member': ['member', 'Member', 'officer', 'Officer', 'executive', 'Executive', 'Admin', 'president'],
+      'officer': ['officer', 'Officer', 'executive', 'Executive', 'Admin', 'president'],
+      'executive': ['executive', 'Executive', 'Admin', 'president'],
+      'president': ['president']
+    };
+
+    const allowedRoles = accessRoles[accessLevel] || accessRoles['member'];
+    const membersWithAccess = await ClubMember.find({
+      clubId: req.params.clubId,
+      status: 'active',
+      role: { $in: allowedRoles },
+      userId: { $ne: req.user.userId }
+    }).select('userId');
+
+    const club = await Club.findById(req.params.clubId);
+    const notificationPromises = membersWithAccess.map(member =>
+      Notification.createNotification({
+        recipient: member.userId,
+        type: 'system',
+        title: 'New content available',
+        message: `${user.username} uploaded new ${contentType} to ${club.name}: ${title}`,
+        relatedClub: req.params.clubId,
+        priority: 'low'
+      })
+    );
+    await Promise.all(notificationPromises);
 
     res.status(201).json({
       message: 'Content uploaded successfully',

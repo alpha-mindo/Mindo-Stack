@@ -3,6 +3,7 @@ const router = express.Router();
 const Club = require('../models/Club');
 const ClubMember = require('../models/ClubMember');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const { authMiddleware } = require('../middleware/auth');
 const { clubPresidentMiddleware, checkPermission } = require('../middleware/clubAuth');
 const { validateObjectId, validateClubExists } = require('../middleware/validators');
@@ -62,6 +63,20 @@ router.post('/', authMiddleware, async (req, res) => {
         clubMemberships: presidentMembership._id
       }
     });
+
+    // Notify all registered users about the new club (except the creator)
+    const allUsers = await User.find({ _id: { $ne: req.user._id } }).select('_id');
+    const notificationPromises = allUsers.map(user =>
+      Notification.createNotification({
+        recipient: user._id,
+        type: 'system',
+        title: 'New club available',
+        message: `${club.name} has been created and is now available!`,
+        relatedClub: club._id,
+        priority: 'low'
+      })
+    );
+    await Promise.all(notificationPromises);
 
     res.status(201).json({
       success: true,
@@ -233,11 +248,43 @@ router.put(
       if (category) updateData.category = category;
       if (tags) updateData.tags = tags;
 
+      // Check if registration is being opened
+      const oldClub = await Club.findById(req.params.clubId);
+      const registrationOpened = req.body.isRecruitmentOpen === true && oldClub.isRecruitmentOpen === false;
+
+      if (req.body.isRecruitmentOpen !== undefined) {
+        updateData.isRecruitmentOpen = req.body.isRecruitmentOpen;
+      }
+
       const club = await Club.findByIdAndUpdate(
         req.params.clubId,
         updateData,
         { new: true, runValidators: true }
       );
+
+      // If registration was just opened, notify all non-members
+      if (registrationOpened) {
+        const clubMemberIds = await ClubMember.find({ 
+          clubId: req.params.clubId,
+          status: 'active'
+        }).distinct('userId');
+        
+        const nonMembers = await User.find({ 
+          _id: { $nin: clubMemberIds }
+        }).select('_id');
+        
+        const notificationPromises = nonMembers.map(user =>
+          Notification.createNotification({
+            recipient: user._id,
+            type: 'system',
+            title: 'Club registration opened',
+            message: `${club.name} is now accepting new members!`,
+            relatedClub: club._id,
+            priority: 'normal'
+          })
+        );
+        await Promise.all(notificationPromises);
+      }
 
       res.json({
         success: true,

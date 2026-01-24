@@ -3,6 +3,7 @@ const router = express.Router({ mergeParams: true }); // mergeParams to access :
 const ClubAnnouncement = require('../models/ClubAnnouncement');
 const Club = require('../models/Club');
 const ClubMember = require('../models/ClubMember');
+const Notification = require('../models/Notification');
 const { authMiddleware } = require('../middleware/auth');
 
 // Middleware to check if user is a club member
@@ -96,6 +97,28 @@ router.post('/', checkPermission('post_announcements'), async (req, res) => {
 
     const announcement = new ClubAnnouncement(announcementData);
     await announcement.save();
+
+    // Send notifications to all active club members (except the announcer)
+    const clubMembers = await ClubMember.find({
+      clubId: req.params.clubId,
+      status: 'active',
+      userId: { $ne: req.user.userId } // Exclude the announcer
+    }).select('userId');
+
+    // Create notifications for all members
+    const notificationPromises = clubMembers.map(member => 
+      Notification.createNotification({
+        recipient: member.userId,
+        type: 'announcement',
+        title: `New ${type || 'announcement'} in your club`,
+        message: `${user.username} posted: ${title}`,
+        relatedClub: req.params.clubId,
+        relatedAnnouncement: announcement._id,
+        priority: 'normal'
+      })
+    );
+
+    await Promise.all(notificationPromises);
 
     res.status(201).json({
       message: 'Announcement created successfully',

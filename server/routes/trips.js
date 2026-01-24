@@ -3,6 +3,7 @@ const router = express.Router({ mergeParams: true }); // mergeParams to access :
 const ClubTrip = require('../models/ClubTrip');
 const Club = require('../models/Club');
 const ClubMember = require('../models/ClubMember');
+const Notification = require('../models/Notification');
 const { authMiddleware } = require('../middleware/auth');
 
 // Middleware to check if user is a club member
@@ -88,6 +89,27 @@ router.post('/', checkPermission('manage_trips'), async (req, res) => {
 
     const trip = new ClubTrip(tripData);
     await trip.save();
+
+    // Notify all club members about the new trip
+    const clubMembers = await ClubMember.find({
+      clubId: req.params.clubId,
+      status: 'active',
+      userId: { $ne: req.user.userId }
+    }).select('userId');
+
+    const club = await Club.findById(req.params.clubId);
+    const notificationPromises = clubMembers.map(member =>
+      Notification.createNotification({
+        recipient: member.userId,
+        type: 'trip_update',
+        title: 'New trip planned',
+        message: `${club.name} is organizing a trip to ${destination}`,
+        relatedClub: req.params.clubId,
+        relatedTrip: trip._id,
+        priority: 'normal'
+      })
+    );
+    await Promise.all(notificationPromises);
 
     res.status(201).json({
       message: 'Trip created successfully',

@@ -3,6 +3,7 @@ const router = express.Router();
 const ClubApplication = require('../models/ClubApplication');
 const Club = require('../models/Club');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const { authMiddleware } = require('../middleware/auth');
 const { checkPermission } = require('../middleware/clubAuth');
 const { 
@@ -54,6 +55,30 @@ router.post(
       await User.findByIdAndUpdate(req.user._id, {
         $push: { clubApplications: application._id }
       });
+
+      // Notify president and members with view_applications permission
+      const ClubMember = require('../models/ClubMember');
+      const membersWithPermission = await ClubMember.find({
+        clubId: req.params.clubId,
+        status: 'active',
+        $or: [
+          { role: 'president' },
+          { 'permissions.view_applications': true },
+          { 'permissions.approve_applications': true }
+        ]
+      }).select('userId');
+
+      const notificationPromises = membersWithPermission.map(member =>
+        Notification.createNotification({
+          recipient: member.userId,
+          type: 'club_join_request',
+          title: 'New club application',
+          message: `${req.user.username} applied to join ${club.name}`,
+          relatedClub: req.params.clubId,
+          priority: 'normal'
+        })
+      );
+      await Promise.all(notificationPromises);
 
       res.status(201).json({
         success: true,
@@ -221,6 +246,17 @@ router.put(
         notes
       });
 
+      // Notify the applicant
+      const club = await Club.findById(application.clubId);
+      await Notification.createNotification({
+        recipient: application.userId,
+        type: 'event_reminder',
+        title: 'Interview scheduled',
+        message: `Your interview for ${club.name} has been scheduled for ${new Date(date).toLocaleDateString()}`,
+        relatedClub: application.clubId,
+        priority: 'high'
+      });
+
       res.json({
         success: true,
         message: 'Interview scheduled successfully',
@@ -318,6 +354,16 @@ router.put(
 
       await application.approve(req.user._id);
 
+      // Notify the applicant
+      await Notification.createNotification({
+        recipient: application.userId,
+        type: 'system',
+        title: 'Application approved! 🎉',
+        message: `Congratulations! Your application to join ${club.name} has been approved`,
+        relatedClub: application.clubId,
+        priority: 'high'
+      });
+
       res.json({
         success: true,
         message: 'Application approved successfully',
@@ -366,6 +412,16 @@ router.put(
       }
 
       await application.reject(req.user._id, reason);
+
+      // Notify the applicant
+      await Notification.createNotification({
+        recipient: application.userId,
+        type: 'system',
+        title: 'Application update',
+        message: `Your application to join ${club.name} was not approved${reason ? ': ' + reason : ''}`,
+        relatedClub: application.clubId,
+        priority: 'normal'
+      });
 
       res.json({
         success: true,

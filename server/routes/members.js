@@ -3,6 +3,7 @@ const router = express.Router();
 const ClubMember = require('../models/ClubMember');
 const Club = require('../models/Club');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const { authMiddleware } = require('../middleware/auth');
 const { clubPresidentMiddleware, clubMemberMiddleware, checkPermission } = require('../middleware/clubAuth');
 const { validateObjectId, validateUserExists, validateMembership } = require('../middleware/validators');
@@ -134,6 +135,16 @@ router.put(
           message: 'Member not found'
         });
       }
+
+      // Notify the member about role change
+      await Notification.createNotification({
+        recipient: req.params.userId,
+        type: 'role_change',
+        title: 'Your role has been updated',
+        message: `Your role in ${club.name} has been changed to ${role}`,
+        relatedClub: req.params.clubId,
+        priority: 'high'
+      });
 
       res.json({
         success: true,
