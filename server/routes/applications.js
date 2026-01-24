@@ -247,7 +247,6 @@ router.put(
       });
 
       // Notify the applicant
-      const club = await Club.findById(application.clubId);
       await Notification.createNotification({
         recipient: application.userId,
         type: 'event_reminder',
