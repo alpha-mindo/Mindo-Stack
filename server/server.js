@@ -32,6 +32,7 @@ app.use('/api/invitations', require('./routes/invitations'));
 app.use('/api/clubs/:clubId/announcements', require('./routes/announcements'));
 app.use('/api/clubs/:clubId/trips', require('./routes/trips'));
 app.use('/api/clubs/:clubId/content', require('./routes/content'));
+app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/status', require('./routes/status'));
 
 // Error handling middleware
