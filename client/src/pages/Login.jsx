@@ -48,7 +48,7 @@ function Login() {
 
         <div className="auth-card gravity-card">
           <div className="auth-header">
-            <h1>Welcome Back</h1>
+            <h1>Welcome</h1>
             <p>Sign in to continue to your account</p>
           </div>
 
