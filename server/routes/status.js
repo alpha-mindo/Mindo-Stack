@@ -92,6 +92,55 @@ router.get('/', async (req, res) => {
             { method: 'GET', path: '/:invitationId', description: 'Get invitation details', auth: true },
             { method: 'DELETE', path: '/:invitationId', description: 'Cancel invitation', auth: true }
           ]
+        },
+        announcements: {
+          base: '/api/clubs/:clubId/announcements',
+          endpoints: [
+            { method: 'POST', path: '/', description: 'Create announcement/poll/form', auth: true, permission: 'post_announcements' },
+            { method: 'GET', path: '/', description: 'List club announcements', auth: true },
+            { method: 'GET', path: '/:announcementId', description: 'Get announcement details', auth: true },
+            { method: 'PUT', path: '/:announcementId', description: 'Update announcement', auth: true },
+            { method: 'DELETE', path: '/:announcementId', description: 'Delete announcement', auth: true },
+            { method: 'PUT', path: '/:announcementId/pin', description: 'Toggle pin status', auth: true, permission: 'post_announcements' },
+            { method: 'POST', path: '/:announcementId/comments', description: 'Add comment', auth: true },
+            { method: 'PUT', path: '/:announcementId/comments/:commentId', description: 'Edit comment', auth: true },
+            { method: 'DELETE', path: '/:announcementId/comments/:commentId', description: 'Delete comment', auth: true },
+            { method: 'POST', path: '/:announcementId/comments/:commentId/reply', description: 'Reply to comment', auth: true },
+            { method: 'POST', path: '/:announcementId/poll/vote', description: 'Vote on poll', auth: true },
+            { method: 'GET', path: '/:announcementId/poll/results', description: 'Get poll results', auth: true },
+            { method: 'PUT', path: '/:announcementId/poll/close', description: 'Close poll', auth: true },
+            { method: 'POST', path: '/:announcementId/form/submit', description: 'Submit form response', auth: true },
+            { method: 'GET', path: '/:announcementId/form/responses', description: 'Get form responses', auth: true, permission: 'post_announcements' },
+            { method: 'PUT', path: '/:announcementId/form/close', description: 'Close form', auth: true },
+            { method: 'DELETE', path: '/:announcementId/form/responses/:responseId', description: 'Delete form response', auth: true }
+          ]
+        },
+        trips: {
+          base: '/api/clubs/:clubId/trips',
+          endpoints: [
+            { method: 'POST', path: '/', description: 'Create trip', auth: true, permission: 'manage_trips' },
+            { method: 'GET', path: '/', description: 'List club trips', auth: true },
+            { method: 'GET', path: '/:tripId', description: 'Get trip details', auth: true },
+            { method: 'PUT', path: '/:tripId', description: 'Update trip', auth: true, permission: 'manage_trips' },
+            { method: 'DELETE', path: '/:tripId', description: 'Delete trip', auth: true, permission: 'manage_trips' },
+            { method: 'POST', path: '/:tripId/signup', description: 'Sign up for trip', auth: true },
+            { method: 'DELETE', path: '/:tripId/signup', description: 'Cancel trip signup', auth: true },
+            { method: 'PUT', path: '/:tripId/status', description: 'Update trip status', auth: true, permission: 'manage_trips' },
+            { method: 'PUT', path: '/:tripId/attendance/:participantId', description: 'Mark attendance', auth: true, permission: 'manage_trips' }
+          ]
+        },
+        content: {
+          base: '/api/clubs/:clubId/content',
+          endpoints: [
+            { method: 'POST', path: '/', description: 'Upload content', auth: true, permission: 'manage_content' },
+            { method: 'GET', path: '/', description: 'List club content', auth: true },
+            { method: 'GET', path: '/:contentId', description: 'Get content details', auth: true },
+            { method: 'PUT', path: '/:contentId', description: 'Update content', auth: true },
+            { method: 'DELETE', path: '/:contentId', description: 'Delete content', auth: true, permission: 'manage_content' },
+            { method: 'GET', path: '/by-category/:category', description: 'Get content by category', auth: true },
+            { method: 'GET', path: '/:contentId/download', description: 'Download content (tracked)', auth: true },
+            { method: 'GET', path: '/categories/list', description: 'List all content categories', auth: true }
+          ]
         }
       },
       models: {
@@ -114,10 +163,17 @@ router.get('/', async (req, res) => {
         permissions: '17 granular permissions',
         applications: 'With interview scheduling',
         invitations: true,
-        announcements: 'Polls, forms, threaded comments',
-        trips: 'Planned (model ready)',
-        content: 'Planned (model ready)',
-        bans: 'Planned (model ready)'
+        announcements: 'With polls, forms, and threaded comments',
+        trips: 'Full trip management with signup and attendance',
+        content: 'Role-based content management with access control',
+        bans: 'Planned (model ready)',
+        adminSystem: 'Admin roles and protected routes'
+      },
+      statistics: {
+        totalEndpoints: 72,
+        routeCategories: 9,
+        models: 9,
+        phaseCompletion: '50% (Phase 5 complete)'
       }
     };
 
