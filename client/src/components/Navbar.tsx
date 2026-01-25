@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { motion } from 'framer-motion'
-import { Home, Users, Calendar, MessageSquare, LogOut, User, LucideIcon } from 'lucide-react'
+import { Home, Users, Calendar, MessageSquare, LogOut, User, Compass, LucideIcon } from 'lucide-react'
 import styled from 'styled-components'
 
 interface NavigationItem {
@@ -244,6 +244,7 @@ function Navbar() {
 
   const navigationItems: NavigationItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
+    { id: 'discover', label: 'Discover', icon: Compass, path: '/discover' },
     { id: 'clubs', label: 'My Clubs', icon: Users, path: '/clubs' },
     { id: 'events', label: 'Events', icon: Calendar, path: '/events' },
     { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages' }

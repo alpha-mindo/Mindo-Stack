@@ -6,6 +6,7 @@ import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Home from './pages/Home'
+import Discover from './pages/Discover'
 import Clubs from './pages/Clubs'
 import Events from './pages/Events'
 import Messages from './pages/Messages'
@@ -88,6 +89,11 @@ function App() {
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          } />
+          <Route path="/discover" element={
+            <ProtectedRoute>
+              <Discover />
             </ProtectedRoute>
           } />
           <Route path="/clubs" element={
