@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Home, Users, Calendar, MessageSquare, LogOut, User, LucideIcon } from 'lucide-react'
 import styled from 'styled-components'
 
@@ -102,7 +101,7 @@ const NavItem = styled(motion.button)<{ $isActive: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 1rem;flex-start
   padding: 0.875rem;
   background: ${props => props.$isActive ? 'rgba(99, 102, 241, 0.2)' : 'transparent'};
   border: none;
@@ -162,7 +161,7 @@ const FooterButton = styled(motion.button)`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.75rem;flex-start
   padding: 0.875rem;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -236,7 +235,6 @@ function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [isCollapsed, setIsCollapsed] = useState(true)
 
   const handleSignOut = () => {
     logout()
@@ -255,10 +253,8 @@ function Navbar() {
   return (
     <SidebarContainer
       initial={{ x: -300 }}
-      animate={{ x: 0, width: isCollapsed ? '80px' : '280px' }}
+      animate={{ x: 0, width: '280px' }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      onMouseEnter={() => setIsCollapsed(false)}
-      onMouseLeave={() => setIsCollapsed(true)}
     >
       {/* Logo Section */}
       <SidebarHeader>
@@ -269,18 +265,9 @@ function Navbar() {
         >
           <LogoText>M</LogoText>
         </BrandLogo>
-        <AnimatePresence>
-          {!isCollapsed && (
-            <BrandName
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              Mindo Stack
-            </BrandName>
-          )}
-        </AnimatePresence>
+        <BrandName>
+          Mindo Stack
+        </BrandName>
       </SidebarHeader>
 
       {/* Navigation Items */}
@@ -296,18 +283,9 @@ function Navbar() {
             <NavIcon $isActive={isActive(item.path)}>
               <item.icon />
             </NavIcon>
-            <AnimatePresence>
-              {!isCollapsed && (
-                <NavLabel
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {item.label}
-                </NavLabel>
-              )}
-            </AnimatePresence>
+            <NavLabel>
+              {item.label}
+            </NavLabel>
             {isActive(item.path) && (
               <ActiveIndicator
                 layoutId="activeIndicator"
@@ -329,18 +307,9 @@ function Navbar() {
           <FooterIcon $isPurple>
             <User />
           </FooterIcon>
-          <AnimatePresence>
-            {!isCollapsed && (
-              <UserInfo
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <UserName>{user?.username}</UserName>
-              </UserInfo>
-            )}
-          </AnimatePresence>
+          <UserInfo>
+            <UserName>{user?.username}</UserName>
+          </UserInfo>
         </UserButton>
 
         {/* Logout Button */}
@@ -352,18 +321,9 @@ function Navbar() {
           <FooterIcon $isRed>
             <LogOut />
           </FooterIcon>
-          <AnimatePresence>
-            {!isCollapsed && (
-              <LogoutLabel
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                Logout
-              </LogoutLabel>
-            )}
-          </AnimatePresence>
+          <LogoutLabel>
+            Logout
+          </LogoutLabel>
         </LogoutButton>
       </SidebarFooter>
     </SidebarContainer>

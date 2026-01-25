@@ -6,6 +6,10 @@ import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Home from './pages/Home'
+import Clubs from './pages/Clubs'
+import Events from './pages/Events'
+import Messages from './pages/Messages'
+import Profile from './pages/Profile'
 import Status from './pages/Status'
 import './App.css'
 
@@ -79,6 +83,31 @@ function App() {
           <Route path="/home" element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          } />
+          <Route path="/clubs" element={
+            <ProtectedRoute>
+              <Clubs />
+            </ProtectedRoute>
+          } />
+          <Route path="/events" element={
+            <ProtectedRoute>
+              <Events />
+            </ProtectedRoute>
+          } />
+          <Route path="/messages" element={
+            <ProtectedRoute>
+              <Messages />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           } />
           <Route path="/" element={<Navigate to="/home" />} />
