@@ -6,8 +6,11 @@ import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Home from './pages/Home'
+import Dashboard from './pages/Dashboard'
 import Discover from './pages/Discover'
 import Clubs from './pages/Clubs'
+import ClubCreate from './pages/ClubCreate'
+import ClubDetails from './pages/ClubDetails'
 import Events from './pages/Events'
 import Messages from './pages/Messages'
 import Profile from './pages/Profile'
@@ -88,7 +91,7 @@ function App() {
           } />
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <Home />
+              <Dashboard />
             </ProtectedRoute>
           } />
           <Route path="/discover" element={
@@ -99,6 +102,16 @@ function App() {
           <Route path="/clubs" element={
             <ProtectedRoute>
               <Clubs />
+            </ProtectedRoute>
+          } />
+          <Route path="/clubs/create" element={
+            <ProtectedRoute>
+              <ClubCreate />
+            </ProtectedRoute>
+          } />
+          <Route path="/clubs/:clubId" element={
+            <ProtectedRoute>
+              <ClubDetails />
             </ProtectedRoute>
           } />
           <Route path="/events" element={
