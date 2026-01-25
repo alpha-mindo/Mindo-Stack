@@ -12,11 +12,22 @@ function Notifications() {
   const fetchUnreadCount = async () => {
     try {
       const token = localStorage.getItem('token')
+      if (!token) return // Don't fetch if not authenticated
+      
       const response = await fetch('http://localhost:5000/api/notifications/unread-count', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token is invalid or expired
+          return
+        }
+        throw new Error('Failed to fetch unread count')
+      }
+      
       const data = await response.json()
       setUnreadCount(data.count)
     } catch (error) {
@@ -29,11 +40,25 @@ function Notifications() {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
+      if (!token) {
+        setLoading(false)
+        return
+      }
+      
       const response = await fetch('http://localhost:5000/api/notifications?limit=10', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          setLoading(false)
+          return
+        }
+        throw new Error('Failed to fetch notifications')
+      }
+      
       const data = await response.json()
       setNotifications(data.notifications)
       setUnreadCount(data.unreadCount)
@@ -48,6 +73,8 @@ function Notifications() {
   const markAsRead = async (notificationId) => {
     try {
       const token = localStorage.getItem('token')
+      if (!token) return
+      
       await fetch(`http://localhost:5000/api/notifications/${notificationId}/read`, {
         method: 'PATCH',
         headers: {
@@ -69,6 +96,8 @@ function Notifications() {
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem('token')
+      if (!token) return
+      
       await fetch('http://localhost:5000/api/notifications/mark-all-read', {
         method: 'PATCH',
         headers: {
@@ -87,6 +116,8 @@ function Notifications() {
   const deleteNotification = async (notificationId) => {
     try {
       const token = localStorage.getItem('token')
+      if (!token) return
+      
       await fetch(`http://localhost:5000/api/notifications/${notificationId}`, {
         method: 'DELETE',
         headers: {
