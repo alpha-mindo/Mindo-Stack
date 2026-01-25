@@ -13,7 +13,7 @@ const { validateObjectId, validateClubExists } = require('../middleware/validato
 // @access  Private (authenticated users)
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { name, description, logo, category, tags, customRoles } = req.body;
+    const { name, description, logo, category, tags, customRoles, applicationForm } = req.body;
 
     // Check if user already owns a club (president exclusivity)
     const existingClub = await Club.findOne({ ownerId: req.user._id });
@@ -44,6 +44,7 @@ router.post('/', authMiddleware, async (req, res) => {
       category,
       tags: tags || [],
       customRoles: customRoles || [],
+      applicationForm: applicationForm || undefined,
       ownerId: req.user._id,
       memberCount: 1
     });
@@ -196,6 +197,33 @@ router.get('/my-memberships', authMiddleware, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching your memberships',
+      error: error.message
+    });
+  }
+});
+
+// @route   GET /api/clubs/my-events
+// @desc    Get events from clubs user is a member of
+// @access  Private
+router.get('/my-events', authMiddleware, async (req, res) => {
+  try {
+    // Get all clubs where user is a member
+    const memberships = await ClubMember.find({ 
+      userId: req.user._id,
+      status: 'active'
+    }).select('clubId');
+
+    const clubIds = memberships.map(m => m.clubId);
+
+    // For now, return empty array - events feature to be implemented
+    res.json({
+      success: true,
+      events: []
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching events',
       error: error.message
     });
   }

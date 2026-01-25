@@ -122,24 +122,51 @@ const clubSchema = new mongoose.Schema({
       default: false
     },
     questions: [{
+      id: {
+        type: String,
+        required: true
+      },
+      type: {
+        type: String,
+        enum: ['short_answer', 'paragraph', 'multiple_choice', 'checkboxes', 'dropdown', 'linear_scale', 'date', 'time'],
+        required: true
+      },
       question: {
         type: String,
         required: true,
         trim: true,
-        maxlength: [300, 'Question cannot exceed 300 characters']
+        maxlength: [500, 'Question cannot exceed 500 characters']
       },
-      type: {
+      description: {
         type: String,
-        enum: ['text', 'textarea', 'multiple-choice'],
-        default: 'text'
+        trim: true,
+        maxlength: [500, 'Description cannot exceed 500 characters']
+      },
+      required: {
+        type: Boolean,
+        default: false
       },
       options: [{
         type: String,
         trim: true
       }],
-      required: {
-        type: Boolean,
-        default: true
+      minScale: {
+        type: Number,
+        min: 0,
+        max: 10
+      },
+      maxScale: {
+        type: Number,
+        min: 0,
+        max: 10
+      },
+      minLabel: {
+        type: String,
+        trim: true
+      },
+      maxLabel: {
+        type: String,
+        trim: true
       }
     }]
   }
@@ -168,13 +195,17 @@ clubSchema.pre('save', function(next) {
         isOpen: false, // President must manually open applications
         questions: [
           {
+            id: 'q_default_1',
+            type: 'paragraph',
             question: 'Why do you want to join this club?',
-            type: 'textarea',
+            description: '',
             required: true
           },
           {
+            id: 'q_default_2',
+            type: 'paragraph',
             question: 'What relevant experience or skills do you have?',
-            type: 'textarea',
+            description: '',
             required: false
           }
         ]

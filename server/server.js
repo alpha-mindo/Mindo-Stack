@@ -33,6 +33,7 @@ app.use('/api/clubs', require('./routes/clubs'));
 app.use('/api/applications', require('./routes/applications'));
 app.use('/api/clubs/:clubId/members', require('./routes/members'));
 app.use('/api/invitations', require('./routes/invitations'));
+app.use('/api/announcements', require('./routes/user-announcements'));
 app.use('/api/clubs/:clubId/announcements', require('./routes/announcements'));
 app.use('/api/clubs/:clubId/trips', require('./routes/trips'));
 app.use('/api/clubs/:clubId/content', require('./routes/content'));
