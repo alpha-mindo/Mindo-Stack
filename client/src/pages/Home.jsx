@@ -1,6 +1,7 @@
 import React from 'react'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
+import Notifications from '../components/Notifications'
 import './Home.css'
 
 function Home() {
@@ -16,9 +17,10 @@ function Home() {
       </div>
 
       <Navbar />
+      <Notifications />
 
       {/* Main Content */}
-      <main className="home-main">
+      <main className="home-main" style={{ marginLeft: '280px' }}>
         <div className="main-content">
           <div className="welcome-banner">
             <h1>Welcome back, {user?.username}!</h1>

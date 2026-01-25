@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactNode } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './pages/Login'
@@ -9,30 +9,34 @@ import Home from './pages/Home'
 import Status from './pages/Status'
 import './App.css'
 
+interface RouteProps {
+  children: ReactNode
+}
+
 // Protected Route wrapper
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children }: RouteProps) {
   const { user, loading } = useAuth()
   
   if (loading) {
     return <div className="loading-screen">Loading...</div>
   }
   
-  return user ? children : <Navigate to="/login" />
+  return user ? <>{children}</> : <Navigate to="/login" />
 }
 
 // Public Route wrapper (redirects to home if already logged in)
-function PublicRoute({ children }) {
+function PublicRoute({ children }: RouteProps) {
   const { user, loading } = useAuth()
   
   if (loading) {
     return <div className="loading-screen">Loading...</div>
   }
   
-  return !user ? children : <Navigate to="/home" />
+  return !user ? <>{children}</> : <Navigate to="/home" />
 }
 
 // Admin Route wrapper (only accessible to admins)
-function AdminRoute({ children }) {
+function AdminRoute({ children }: RouteProps) {
   const { user, loading } = useAuth()
   
   if (loading) {
@@ -47,7 +51,7 @@ function AdminRoute({ children }) {
     return <Navigate to="/home" />
   }
   
-  return children
+  return <>{children}</>
 }
 
 function App() {
