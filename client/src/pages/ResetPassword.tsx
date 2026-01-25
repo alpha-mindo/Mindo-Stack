@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState, FormEvent, ChangeEvent } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
@@ -9,15 +9,14 @@ function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { resetToken } = useParams()
+  const { resetToken } = useParams<{ resetToken: string }>()
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
 
-    // Validate passwords
     if (password.length < 6) {
       setError('Password must be at least 6 characters long')
       return
@@ -35,18 +34,14 @@ function ResetPassword() {
         password 
       })
       
-      // Auto-login after successful password reset
       const { token, user } = response.data
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
-      // Update auth context
       login(user.email, password)
-      
-      // Redirect to home
       navigate('/home')
-    } catch (err) {
+    } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to reset password. Please try again.')
     } finally {
       setLoading(false)
@@ -64,7 +59,7 @@ function ResetPassword() {
       <div className="auth-content-wrapper">
         <div className="auth-card parsec-card">
           <div className="auth-header">
-            <h1>Reset Password</h1>
+            <h1>Set New Password</h1>
             <p>Enter your new password</p>
           </div>
 
@@ -78,9 +73,8 @@ function ResetPassword() {
                 type="password"
                 placeholder="Enter new password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 required
-                disabled={loading}
                 minLength={6}
               />
             </div>
@@ -92,27 +86,21 @@ function ResetPassword() {
                 type="password"
                 placeholder="Confirm new password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
                 required
-                disabled={loading}
-                minLength={6}
               />
             </div>
 
-            <button 
-              type="submit" 
-              className="auth-button parsec-button"
-              disabled={loading}
-            >
+            <button type="submit" className="auth-button parsec-button" disabled={loading}>
               {loading ? 'Resetting...' : 'Reset Password'}
             </button>
-
-            <div className="auth-footer">
-              <p>
-                Remember your password? <Link to="/">Login here</Link>
-              </p>
-            </div>
           </form>
+
+          <div className="auth-footer">
+            <p>
+              <Link to="/login">Back to Login</Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -1,17 +1,22 @@
-import React, { useState } from 'react'
+import { useState, FormEvent, ChangeEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './Auth.css'
 
+interface FormData {
+  email: string
+  password: string
+}
+
 function Login() {
-  const [formData, setFormData] = useState({ email: '', password: '' })
+  const [formData, setFormData] = useState<FormData>({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -21,7 +26,7 @@ function Login() {
     if (result.success) {
       navigate('/home')
     } else {
-      setError(result.error)
+      setError(result.error || 'Login failed')
     }
     
     setLoading(false)
@@ -74,7 +79,7 @@ function Login() {
                 type="email"
                 placeholder="you@example.com"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
                 className="input-with-icon"
                 required
                 autoComplete="email"
@@ -94,7 +99,7 @@ function Login() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, password: e.target.value })}
                   className="input-with-icon"
                   required
                   autoComplete="current-password"
@@ -103,7 +108,7 @@ function Login() {
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowPassword(!showPassword)}
-                  tabIndex="-1"
+                  tabIndex={-1}
                 >
                   {showPassword ? (
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -150,13 +155,9 @@ function Login() {
 
           <div className="auth-footer">
             <p>
-              Don't have an account? <Link to="/signup" className="signup-link">Create one now</Link>
+              Don't have an account? <Link to="/signup">Sign Up</Link>
             </p>
           </div>
-        </div>
-
-        <div className="auth-info">
-          <p>Secure authentication powered by industry-standard encryption</p>
         </div>
       </div>
     </div>

@@ -1,10 +1,17 @@
-import React, { useState } from 'react'
+import { useState, FormEvent, ChangeEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './Auth.css'
 
+interface FormData {
+  username: string
+  email: string
+  password: string
+  confirmPassword: string
+}
+
 function Signup() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     username: '',
     email: '',
     password: '',
@@ -15,7 +22,7 @@ function Signup() {
   const { signup } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
 
@@ -41,7 +48,7 @@ function Signup() {
     if (result.success) {
       navigate('/home')
     } else {
-      setError(result.error)
+      setError(result.error || 'Signup failed')
     }
     
     setLoading(false)
@@ -76,7 +83,7 @@ function Signup() {
                 type="text"
                 placeholder="Enter username"
                 value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, username: e.target.value })}
                 required
                 minLength={3}
               />
@@ -89,7 +96,7 @@ function Signup() {
                 type="email"
                 placeholder="Enter email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
                 required
               />
             </div>
@@ -101,7 +108,7 @@ function Signup() {
                 type="password"
                 placeholder="Enter password"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, password: e.target.value })}
                 required
                 minLength={6}
               />
@@ -114,7 +121,7 @@ function Signup() {
                 type="password"
                 placeholder="Confirm password"
                 value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 required
               />
             </div>

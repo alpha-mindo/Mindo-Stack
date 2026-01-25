@@ -1,18 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, MouseEvent } from 'react'
 import './Notifications.css'
 
-function Notifications({ isFixed = true }) {
+interface Notification {
+  _id: string
+  type: 'club_invitation' | 'event_reminder' | 'announcement' | string
+  title: string
+  message: string
+  isRead: boolean
+  createdAt: string
+}
+
+interface NotificationsProps {
+  isFixed?: boolean
+}
+
+function Notifications(_props: NotificationsProps = { isFixed: true }) {
   const [showDropdown, setShowDropdown] = useState(false)
-  const [notifications, setNotifications] = useState([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
-  const dropdownRef = useRef(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Fetch unread count
   const fetchUnreadCount = async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) return // Don't fetch if not authenticated
+      if (!token) return
       
       const response = await fetch('http://localhost:5000/api/notifications/unread-count', {
         headers: {
@@ -22,7 +35,6 @@ function Notifications({ isFixed = true }) {
       
       if (!response.ok) {
         if (response.status === 401) {
-          // Token is invalid or expired
           return
         }
         throw new Error('Failed to fetch unread count')
@@ -70,7 +82,7 @@ function Notifications({ isFixed = true }) {
   }
 
   // Mark notification as read
-  const markAsRead = async (notificationId) => {
+  const markAsRead = async (notificationId: string) => {
     try {
       const token = localStorage.getItem('token')
       if (!token) return
@@ -82,7 +94,6 @@ function Notifications({ isFixed = true }) {
         }
       })
       
-      // Update local state
       setNotifications(notifications.map(n => 
         n._id === notificationId ? { ...n, isRead: true } : n
       ))
@@ -113,7 +124,7 @@ function Notifications({ isFixed = true }) {
   }
 
   // Delete notification
-  const deleteNotification = async (notificationId) => {
+  const deleteNotification = async (notificationId: string) => {
     try {
       const token = localStorage.getItem('token')
       if (!token) return
@@ -136,7 +147,7 @@ function Notifications({ isFixed = true }) {
   }
 
   // Get notification icon based on type
-  const getNotificationIcon = (type) => {
+  const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'club_invitation':
         return (
@@ -166,10 +177,10 @@ function Notifications({ isFixed = true }) {
   }
 
   // Format time ago
-  const formatTimeAgo = (dateString) => {
+  const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
-    const diff = now - date
+    const diff = now.getTime() - date.getTime()
     const minutes = Math.floor(diff / 60000)
     const hours = Math.floor(minutes / 60)
     const days = Math.floor(hours / 24)
@@ -190,8 +201,8 @@ function Notifications({ isFixed = true }) {
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: Event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false)
       }
     }
@@ -205,7 +216,7 @@ function Notifications({ isFixed = true }) {
   // Fetch unread count on mount and set interval
   useEffect(() => {
     fetchUnreadCount()
-    const interval = setInterval(fetchUnreadCount, 30000) // Every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000)
     return () => clearInterval(interval)
   }, [])
 
@@ -261,7 +272,7 @@ function Notifications({ isFixed = true }) {
                   </div>
                   <button
                     className="notification-delete"
-                    onClick={(e) => {
+                    onClick={(e: MouseEvent<HTMLButtonElement>) => {
                       e.stopPropagation()
                       deleteNotification(notification._id)
                     }}

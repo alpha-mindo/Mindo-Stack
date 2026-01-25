@@ -1,4 +1,3 @@
-import React from 'react'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'

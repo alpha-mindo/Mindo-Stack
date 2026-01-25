@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState, FormEvent, ChangeEvent } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import './Auth.css'
@@ -9,7 +9,7 @@ function ForgotPassword() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setMessage('')
@@ -18,8 +18,8 @@ function ForgotPassword() {
     try {
       const response = await axios.post('/api/auth/forgot-password', { email })
       setMessage(response.data.message)
-      setEmail('') // Clear the form
-    } catch (err) {
+      setEmail('')
+    } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to send reset email. Please try again.')
     } finally {
       setLoading(false)
@@ -52,7 +52,7 @@ function ForgotPassword() {
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -64,7 +64,7 @@ function ForgotPassword() {
 
           <div className="auth-footer">
             <p>
-              Remember your password? <Link to="/login">Sign In</Link>
+              <Link to="/login">Back to Login</Link>
             </p>
           </div>
         </div>
