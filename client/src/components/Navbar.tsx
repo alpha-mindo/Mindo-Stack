@@ -100,8 +100,8 @@ const NavItem = styled(motion.button)<{ $isActive: boolean }>`
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 1rem;flex-start
+  justify-content: flex-start;
+  gap: 1rem;
   padding: 0.875rem;
   background: ${props => props.$isActive ? 'rgba(99, 102, 241, 0.2)' : 'transparent'};
   border: none;
@@ -141,8 +141,9 @@ const NavLabel = styled(motion.span)`
 const ActiveIndicator = styled(motion.div)`
   position: absolute;
   left: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
   height: 24px;
   width: 3px;
   background: linear-gradient(180deg, #6366f1 0%, #a855f7 100%);
@@ -160,8 +161,8 @@ const SidebarFooter = styled.div`
 const FooterButton = styled(motion.button)`
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.75rem;flex-start
+  justify-content: flex-start;
+  gap: 0.75rem;
   padding: 0.875rem;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -252,16 +253,17 @@ function Navbar() {
 
   return (
     <SidebarContainer
-      initial={{ x: -300 }}
-      animate={{ x: 0, width: '280px' }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      initial={{ x: 0, opacity: 1 }}
+      animate={{ x: 0, width: '280px', opacity: 1 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
     >
       {/* Logo Section */}
       <SidebarHeader>
         <BrandLogo
           onClick={() => navigate('/dashboard')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ duration: 0.15 }}
         >
           <LogoText>M</LogoText>
         </BrandLogo>
@@ -277,8 +279,9 @@ function Navbar() {
             key={item.id}
             $isActive={isActive(item.path)}
             onClick={() => navigate(item.path)}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ x: 2 }}
+            whileTap={{ scale: 0.99 }}
+            transition={{ duration: 0.15 }}
           >
             <NavIcon $isActive={isActive(item.path)}>
               <item.icon />
@@ -289,7 +292,7 @@ function Navbar() {
             {isActive(item.path) && (
               <ActiveIndicator
                 layoutId="activeIndicator"
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
               />
             )}
           </NavItem>
@@ -301,8 +304,9 @@ function Navbar() {
         {/* User Profile Button */}
         <UserButton
           onClick={() => navigate('/profile')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ x: 2 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ duration: 0.15 }}
         >
           <FooterIcon $isPurple>
             <User />
@@ -315,8 +319,9 @@ function Navbar() {
         {/* Logout Button */}
         <LogoutButton
           onClick={handleSignOut}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ x: 2 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ duration: 0.15 }}
         >
           <FooterIcon $isRed>
             <LogOut />
