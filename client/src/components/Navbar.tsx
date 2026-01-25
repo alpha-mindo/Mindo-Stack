@@ -190,6 +190,33 @@ const UserButton = styled(FooterButton)`
   }
 `
 
+const UserAvatar = styled.img`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  flex-shrink: 0;
+`
+
+const UserAvatarPlaceholder = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  flex-shrink: 0;
+  color: #a78bfa;
+  
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+`
+
 const LogoutButton = styled(FooterButton)`
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.25);
@@ -309,9 +336,13 @@ function Navbar() {
           whileTap={{ scale: 0.98 }}
           transition={{ duration: 0.15 }}
         >
-          <FooterIcon $isPurple>
-            <User />
-          </FooterIcon>
+          {user?.profilePicture ? (
+            <UserAvatar src={`http://localhost:5000${user.profilePicture}`} alt={user.username} />
+          ) : (
+            <UserAvatarPlaceholder>
+              <User />
+            </UserAvatarPlaceholder>
+          )}
           <UserInfo>
             <UserName>{user?.username}</UserName>
           </UserInfo>

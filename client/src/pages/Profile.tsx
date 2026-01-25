@@ -1,8 +1,8 @@
-import { useState, useEffect, FormEvent, ChangeEvent } from 'react'
+import { useState, useEffect, FormEvent, ChangeEvent, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { User, Mail, Edit2, Save, X, Key, LogOut } from 'lucide-react'
+import { User, Mail, Edit2, Save, X, Key, LogOut, Camera } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
@@ -11,7 +11,7 @@ interface ProfileData {
   username: string
   email: string
   bio?: string
-  avatar?: string
+  profilePicture?: string
 }
 
 function Profile() {
@@ -22,11 +22,14 @@ function Profile() {
     username: '',
     email: '',
     bio: '',
-    avatar: ''
+    profilePicture: ''
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (user) {
@@ -34,10 +37,23 @@ function Profile() {
         username: user.username,
         email: user.email,
         bio: '',
-        avatar: ''
+        profilePicture: user.profilePicture || ''
       })
+      setPreviewUrl(user.profilePicture || '')
     }
   }, [user])
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -47,23 +63,46 @@ function Profile() {
 
     try {
       const token = localStorage.getItem('token')
+      
+      // If there's a file, upload it first
+      let profilePictureUrl = formData.profilePicture
+      if (selectedFile) {
+        const formDataFile = new FormData()
+        formDataFile.append('profilePicture', selectedFile)
+        
+        const uploadResponse = await fetch('http://localhost:5000/api/users/upload-profile-picture', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formDataFile
+        })
+        
+        if (!uploadResponse.ok) throw new Error('Failed to upload profile picture')
+        const uploadData = await uploadResponse.json()
+        profilePictureUrl = uploadData.profilePicture
+      }
+
+      // Update profile with new data
       const response = await fetch(`http://localhost:5000/api/users/${user?.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, profilePicture: profilePictureUrl })
       })
 
       if (!response.ok) throw new Error('Failed to update profile')
       
       setMessage('Profile updated successfully!')
       setIsEditing(false)
+      setSelectedFile(null)
       
       // Update local storage
-      const updatedUser = { ...user, ...formData }
+      const updatedUser = { ...user, ...formData, profilePicture: profilePictureUrl }
       localStorage.setItem('user', JSON.stringify(updatedUser))
+      window.location.reload() // Reload to update navbar
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -117,6 +156,33 @@ function Profile() {
             {error && <ErrorMessage>{error}</ErrorMessage>}
 
             <Form onSubmit={handleSubmit}>
+              <ProfilePictureSection>
+                <AvatarContainer>
+                  {previewUrl ? (
+                    <Avatar src={previewUrl} alt="Profile" />
+                  ) : (
+                    <AvatarPlaceholder>
+                      <User size={48} />
+                    </AvatarPlaceholder>
+                  )}
+                  {isEditing && (
+                    <UploadButton
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <Camera size={18} />
+                    </UploadButton>
+                  )}
+                </AvatarContainer>
+                <HiddenFileInput
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+              </ProfilePictureSection>
               <FormGroup>
                 <Label>
                   <User size={18} />
@@ -292,6 +358,63 @@ const Subtitle = styled.p`
   font-size: 1.125rem;
   color: rgba(255, 255, 255, 0.6);
   margin: 0.5rem 0 0 0;
+`
+
+const ProfilePictureSection = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+`
+
+const AvatarContainer = styled.div`
+  position: relative;
+  width: 120px;
+  height: 120px;
+`
+
+const Avatar = styled.img`
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(99, 102, 241, 0.3);
+`
+
+const AvatarPlaceholder = styled.div`
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid rgba(99, 102, 241, 0.3);
+  color: rgba(255, 255, 255, 0.6);
+`
+
+const UploadButton = styled(motion.button)`
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  border: 3px solid rgba(10, 14, 35, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.6);
+  }
+`
+
+const HiddenFileInput = styled.input`
+  display: none;
 `
 
 const ProfileCard = styled(motion.div)`

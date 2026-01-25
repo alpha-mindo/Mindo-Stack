@@ -35,6 +35,7 @@ function Notifications(_props: NotificationsProps = { isFixed: true }) {
       
       if (!response.ok) {
         if (response.status === 401) {
+          // Silent fail for unauthorized - user not logged in
           return
         }
         throw new Error('Failed to fetch unread count')
@@ -43,7 +44,10 @@ function Notifications(_props: NotificationsProps = { isFixed: true }) {
       const data = await response.json()
       setUnreadCount(data.count)
     } catch (error) {
-      console.error('Error fetching unread count:', error)
+      // Only log non-auth errors
+      if (error instanceof Error && !error.message.includes('401')) {
+        console.error('Error fetching unread count:', error)
+      }
     }
   }
 
@@ -75,7 +79,10 @@ function Notifications(_props: NotificationsProps = { isFixed: true }) {
       setNotifications(data.notifications)
       setUnreadCount(data.unreadCount)
     } catch (error) {
-      console.error('Error fetching notifications:', error)
+      // Only log non-auth errors
+      if (error instanceof Error && !error.message.includes('401')) {
+        console.error('Error fetching notifications:', error)
+      }
     } finally {
       setLoading(false)
     }

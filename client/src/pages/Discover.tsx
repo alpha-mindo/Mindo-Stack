@@ -40,20 +40,24 @@ function Discover() {
 
   const fetchClubs = async () => {
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch('http://localhost:5000/api/clubs', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       })
 
       if (!response.ok) throw new Error('Failed to fetch clubs')
       
       const data = await response.json()
-      setClubs(data)
-      setFilteredClubs(data)
+      // Ensure data is an array
+      const clubsArray = Array.isArray(data) ? data : (data.clubs || [])
+      setClubs(clubsArray)
+      setFilteredClubs(clubsArray)
     } catch (err) {
       console.error('Error fetching clubs:', err)
       setClubs([])
+      setFilteredClubs([])
     } finally {
       setLoading(false)
     }
