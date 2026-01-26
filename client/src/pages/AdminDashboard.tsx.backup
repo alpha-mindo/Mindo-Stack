@@ -44,10 +44,7 @@ interface Club {
   isSuspended: boolean
   violationCount: number
   suspensionEndDate?: string
-  suspensionReason?: string
   createdAt: string
-  category: string
-  memberCount: number
 }
 
 interface Violation {
@@ -208,54 +205,7 @@ function AdminDashboard() {
       const token = localStorage.getItem('token')
       const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (response.ok) {
-        fetchUsers()
-      }
-    } catch (err) {
-      alert('Error deleting user')
-    }
-  }
-
-  const handleDeleteClub = async (clubId: string) => {
-    if (!confirm('Are you sure you want to delete this club? This action cannot be undone.')) return
-
-    try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${API_URL}/api/admin/clubs/${clubId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (response.ok) {
-        fetchClubs()
-      }
-    } catch (err) {
-      alert('Error deleting club')
-    }
-  }
-
-  const handleUpdateTicketStatus = async (ticketId: string, newStatus: string) => {
-    try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${API_URL}/api/tickets/${ticketId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      })
-
-      if (response.ok) {
-        fetchTickets()
-      }
-    } catch (err) {
-      alert('Error updating ticket status')
-    }
-  }
+   
 
   const handleIssueViolation = async () => {
     if (!selectedClub) return
@@ -281,7 +231,6 @@ function AdminDashboard() {
           suspensionDays: '7'
         })
         fetchClubs()
-        fetchViolations()
         alert('Violation issued successfully')
       }
     } catch (err) {
@@ -325,7 +274,11 @@ function AdminDashboard() {
       if (response.ok) {
         fetchViolations()
         alert('Violation resolved')
-      }
+      }  <Tab $active={activeTab === 'violations'} onClick={() => setActiveTab('violations')}>
+              <AlertTriangle size={16} />
+              Violations
+            </Tab>
+          
     } catch (err) {
       alert('Error resolving violation')
     }
@@ -338,7 +291,7 @@ function AdminDashboard() {
 
   const openSuspensionModal = (club: Club) => {
     setSelectedClub(club)
-    // Pre-fill with remaining days from current suspension
+    // Pre-fill with current suspension if exists
     if (club.suspensionEndDate) {
       const daysRemaining = Math.ceil(
         (new Date(club.suspensionEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
@@ -373,6 +326,67 @@ function AdminDashboard() {
       }
     } catch (err) {
       alert('Error updating suspension')
+    }
+  }     headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      if (response.ok) {
+        fetchUsers()
+      }
+    } catch (err) {
+      alert('Error deleting user')
+    }
+  }
+
+  const handleDeleteClub = async (clubId: string) => {
+    if (!confirm('Are you sure you want to delete this club? This action cannot be undone.')) return
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/api/admin/clubs/${clubId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      if (response.ok) {
+        fetchClubs()
+      }
+    } catch (err) {
+      alert('Error deleting club')
+    }
+  }
+
+  const handleUpdateTicketStatus = async (ticketId: string, newStatus: string) => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/api/tickets/${ticketId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JS  <StatCard>
+                    <StatIcon style={{ background: 'rgba(251, 146, 60, 0.2)', color: '#fb923c' }}>
+                      <Ban size={24} />
+                    </StatIcon>
+                    <StatValue>{stats.suspendedClubs}</StatValue>
+                    <StatLabel>Suspended Clubs</StatLabel>
+                  </StatCard>
+                  <StatCard>
+                    <StatIcon style={{ background: 'rgba(244, 63, 94, 0.2)', color: '#f43f5e' }}>
+                      <AlertTriangle size={24} />
+                    </StatIcon>
+                    <StatValue>{stats.unresolvedViolations}</StatValue>
+                    <StatLabel>Active Violations</StatLabel>
+                  </StatCard>
+                ON.stringify({ status: newStatus })
+      })
+
+      if (response.ok) {
+        fetchTickets()
+      }
+    } catch (err) {
+      alert('Error updating ticket status')
     }
   }
 
@@ -412,10 +426,6 @@ function AdminDashboard() {
             <Tab $active={activeTab === 'clubs'} onClick={() => setActiveTab('clubs')}>
               <Building2 size={16} />
               Clubs
-            </Tab>
-            <Tab $active={activeTab === 'violations'} onClick={() => setActiveTab('violations')}>
-              <AlertTriangle size={16} />
-              Violations
             </Tab>
           </TabsContainer>
 
@@ -467,123 +477,13 @@ function AdminDashboard() {
                     <StatValue>{stats.recentUsers}</StatValue>
                     <StatLabel>New Users (7d)</StatLabel>
                   </StatCard>
-                  <StatCard>
-                    <StatIcon style={{ background: 'rgba(251, 146, 60, 0.2)', color: '#fb923c' }}>
-                      <Ban size={24} />
-                    </StatIcon>
-                    <StatValue>{stats.suspendedClubs}</StatValue>
-                    <StatLabel>Suspended Clubs</StatLabel>
-                  </StatCard>
-                  <StatCard>
-                    <StatIcon style={{ background: 'rgba(244, 63, 94, 0.2)', color: '#f43f5e' }}>
-                      <AlertTriangle size={24} />
-                    </StatIcon>
-                    <StatValue>{stats.unresolvedViolations}</StatValue>
-                    <StatLabel>Active Violations</StatLabel>
-                  </StatCard>
                 </StatsGrid>
               )}
 
               {activeTab === 'users' && (
                 <TableContainer>
                   <Table>
-                    <thead>
-                      <tr>
-                        <Th>Username</Th>
-                        <Th>Email</Th>
-                        <Th>Role</Th>
-                        <Th>Joined</Th>
-                        <Th>Actions</Th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((user) => (
-                        <tr key={user._id}>
-                          <Td>{user.username}</Td>
-                          <Td>{user.email}</Td>
-                          <Td>
-                            {user.isAdmin ? (
-                              <AdminBadge>Admin</AdminBadge>
-                            ) : (
-                              <UserBadge>User</UserBadge>
-                            )}
-                          </Td>
-                          <Td>{new Date(user.createdAt).toLocaleDateString()}</Td>
-                          <Td>
-                            <ActionButton onClick={() => handleToggleAdmin(user._id)}>
-                              {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
-                            </ActionButton>
-                            <DeleteButton onClick={() => handleDeleteUser(user._id)}>
-                              <Trash2 size={14} />
-                            </DeleteButton>
-                          </Td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </TableContainer>
-              )}
-
-              {activeTab === 'tickets' && (
-                <TableContainer>
-                  <Table>
-                    <thead>
-                      <tr>
-                        <Th>Subject</Th>
-                        <Th>User</Th>
-                        <Th>Category</Th>
-                        <Th>Priority</Th>
-                        <Th>Status</Th>
-                        <Th>Created</Th>
-                        <Th>Actions</Th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tickets.map((ticket) => (
-                        <tr key={ticket._id}>
-                          <Td>{ticket.subject}</Td>
-                          <Td>{ticket.userId.username}</Td>
-                          <Td>{ticket.category}</Td>
-                          <Td>
-                            <PriorityBadge $priority={ticket.priority}>
-                              {ticket.priority}
-                            </PriorityBadge>
-                          </Td>
-                          <Td>
-                            <Select
-                              value={ticket.status}
-                              onChange={(e) => handleUpdateTicketStatus(ticket._id, e.target.value)}
-                            >
-                              <option value="open">Open</option>
-                              <option value="in-progress">In Progress</option>
-                              <option value="waiting-on-user">Waiting on User</option>
-                              <option value="resolved">Resolved</option>
-                              <option value="closed">Closed</option>
-                            </Select>
-                          </Td>
-                          <Td>{new Date(ticket.createdAt).toLocaleDateString()}</Td>
-                          <Td>
-                            <ActionButton onClick={() => window.open(`/help/${ticket._id}`, '_blank')}>
-                              View
-                            </ActionButton>
-                          </Td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </TableContainer>
-              )}
-
-              {activeTab === 'clubs' && (
-                <TableContainer>
-                  <Table>
-                    <thead>
-                      <tr>
-                        <Th>Name</Th>
-                        <Th>Description</Th>
-                        <Th>Category</Th>
-                        <Th>Members</Th>
-                        <Th>Status</Th>
+                    <thead>Status</Th>
                         <Th>Violations</Th>
                         <Th>Created</Th>
                         <Th>Actions</Th>
@@ -611,104 +511,53 @@ function AdminDashboard() {
                           <Td>
                             {club.violationCount > 0 && (
                               <ViolationCount>{club.violationCount}</ViolationCount>
-                            )}
-                          </Td>
-                          <Td>{new Date(club.createdAt).toLocaleDateString()}</Td>
-                          <Td>
-                            <ActionButton onClick={() => openViolationModal(club)}>
-                              <AlertTriangle size={12} />
-                              Warn
-                            </ActionButton>
-                            {club.isSuspended && (
-                              <>
-                                <ActionButton 
-                                  onClick={() => openSuspensionModal(club)} 
-                                  style={{ background: 'rgba(245, 158, 11, 0.2)', borderColor: 'rgba(245, 158, 11, 0.3)', color: '#f59e0b' }}
-                                >
-                                  <Clock size={12} />
-                                  Edit
-                                </ActionButton>
-                                <ActionButton onClick={() => handleUnsuspendClub(club._id)}>
-                                  <CheckCircle size={12} />
-                                  Unsuspend
-                                </ActionButton>
-                              </>
-                            )}
-                            <DeleteButton onClick={() => handleDeleteClub(club._id)}>
-                              <Trash2 size={14} />
-                            </DeleteButton>
-                          </Td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </TableContainer>
-              )}
 
-              {activeTab === 'violations' && (
-                <TableContainer>
-                  <Table>
-                    <thead>
-                      <tr>
-                        <Th>Club</Th>
-                        <Th>Type</Th>
-                        <Th>Severity</Th>
-                        <Th>Action</Th>
-                        <Th>Issued By</Th>
-                        <Th>Date</Th>
-                        <Th>Status</Th>
-                        <Th>Actions</Th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {violations.map((violation) => (
-                        <tr key={violation._id}>
-                          <Td>{violation.club.name}</Td>
-                          <Td>{violation.violationType}</Td>
-                          <Td>
-                            <PriorityBadge $priority={violation.severity}>
-                              {violation.severity}
-                            </PriorityBadge>
-                          </Td>
-                          <Td>
-                            {violation.action === 'suspension' ? (
-                              <StatusBadge $color="#f59e0b">Suspension</StatusBadge>
-                            ) : (
-                              <StatusBadge $color="#6366f1">Warning</StatusBadge>
-                            )}
-                          </Td>
-                          <Td>{violation.issuedBy.username}</Td>
-                          <Td>{new Date(violation.createdAt).toLocaleDateString()}</Td>
-                          <Td>
-                            {violation.resolved ? (
-                              <StatusBadge $color="#10b981">
-                                <CheckCircle size={12} />
-                                Resolved
-                              </StatusBadge>
-                            ) : (
-                              <StatusBadge $color="#ef4444">
-                                Active
-                              </StatusBadge>
-                            )}
-                          </Td>
-                          <Td>
-                            {!violation.resolved && (
-                              <ActionButton onClick={() => handleResolveViolation(violation._id)}>
-                                <CheckCircle size={12} />
-                                Resolve
-                              </ActionButton>
-                            )}
-                          </Td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </TableContainer>
-              )}
-            </>
-          )}
-        </ContentWrapper>
-      </MainContent>
+      {showSuspensionModal && selectedClub && (
+        <Modal onClick={() => setShowSuspensionModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>Edit Suspension - {selectedClub.name}</ModalTitle>
+            </ModalHeader>
+            <ModalBody>
+              <InfoText>
+                Current Status: <strong>{selectedClub.isSuspended ? 'Suspended' : 'Active'}</strong>
+                {selectedClub.suspensionEndDate && (
+                  <>
+                    <br />
+                    Ends: <strong>{new Date(selectedClub.suspensionEndDate).toLocaleDateString()}</strong>
+                  </>
+                )}
+              </InfoText>
+              <FormGroup>
+                <Label>New Suspension Duration (days)</Label>
+                <Input 
+                  type="number" 
+                  value={suspensionForm.suspensionDays}
+                  onChange={(e) => setSuspensionForm({...suspensionForm, suspensionDays: e.target.value})}
+                  min="1"
+                  placeholder="Enter number of days"
+                />
+                <HelpText>
+                  Setting new duration will extend or shorten the suspension from today.
+                </HelpText>
+              </FormGroup>
+              <FormGroup>
+                <Label>Reason (optional)</Label>
+                <TextArea
+                  value={suspensionForm.reason}
+                  onChange={(e) => setSuspensionForm({...suspensionForm, reason: e.target.value})}
+                  placeholder="Update reason for suspension..."
+                  rows={3}
+                />
+              </FormGroup>
+            </ModalBody>
+            <ModalFooter>
+              <CancelButton onClick={() => setShowSuspensionModal(false)}>Cancel</CancelButton>
+              <SubmitButton onClick={handleUpdateSuspension}>Update Suspension</SubmitButton>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
 
       {showViolationModal && selectedClub && (
         <Modal onClick={() => setShowViolationModal(false)}>
@@ -790,13 +639,9 @@ function AdminDashboard() {
               <ModalTitle>Edit Suspension - {selectedClub.name}</ModalTitle>
             </ModalHeader>
             <ModalBody>
-              <InfoText>
-                <Clock size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-                Current suspension ends on <strong>
-                  {selectedClub.suspensionEndDate 
-                    ? new Date(selectedClub.suspensionEndDate).toLocaleDateString() 
-                    : 'N/A'}
-                </strong>
+              <InfoText style={{ marginBottom: '1rem' }}>
+                <Clock size={16} />
+                Current suspension ends on {selectedClub.suspensionEndDate ? new Date(selectedClub.suspensionEndDate).toLocaleDateString() : 'N/A'}
               </InfoText>
               <FormGroup>
                 <Label>New Suspension Duration (days)</Label>
@@ -828,6 +673,197 @@ function AdminDashboard() {
           </ModalContent>
         </Modal>
       )}
+                            )}
+                          </Td>
+                          <Td>{new Date(club.createdAt).toLocaleDateString()}</Td>
+                          <Td>
+                            <ActionButton onClick={() => openViolationModal(club)}>
+                              <AlertTriangle size={12} />
+                              Warn
+                            </ActionButton>
+                            {club.isSuspended ? (
+                              <>
+                                <ActionButton onClick={() => openSuspensionModal(club)} style={{ background: 'rgba(245, 158, 11, 0.2)', borderColor: 'rgba(245, 158, 11, 0.3)', color: '#f59e0b' }}>
+                                  <Clock size={12} />
+                                  Edit
+                                </ActionButton>
+                                <ActionButton onClick={() => handleUnsuspendClub(club._id)}>
+                                  <CheckCircle size={12} />
+                                  Unsuspend
+                                </ActionButton>
+                              </>
+                            ) : null}
+                            <DeleteButton onClick={() => handleDeleteClub(club._id)}>
+                              <Trash2 size={14} />
+                            </DeleteButton>
+                          </Td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </TableContainer>
+              )}
+
+              {activeTab === 'violations' && (
+                <TableContainer>
+                  <Table>
+                    <thead>
+                      <tr>
+                        <Th>Club</Th>
+                        <Th>Type</Th>
+                        <Th>Severity</Th>
+                        <Th>Action</Th>
+                        <Th>Issued By</Th>
+                        <Th>Date</Th>
+                        <Th>Status</Th>
+                        <Th>Actions</Th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {violations.map((violation) => (
+                        <tr key={violation._id}>
+                          <Td>{violation.club.name}</Td>
+                          <Td>{violation.violationType}</Td>
+                          <Td>
+                            <PriorityBadge $priority={violation.severity}>
+                              {violation.severity}
+                            </PriorityBadge>
+                          </Td>
+                          <Td>
+                            {violation.action === 'suspension' ? (
+                              <StatusBadge $color="#f59e0b">Suspension</StatusBadge>
+                            ) : (
+                              <StatusBadge $color="#6366f1">Warning</StatusBadge>
+                            )}
+                          </Td>
+                          <Td>{violation.issuedBy.username}</Td>
+                          <Td>{new Date(violation.createdAt).toLocaleDateString()}</Td>
+                          <Td>
+                            {violation.resolved ? (
+                              <StatusBadge $color="#10b981">
+                                <CheckCircle size={12} />
+                                Resolved
+                              </StatusBadge>
+                            ) : (
+                              <StatusBadge $color="#ef4444">
+                                Active
+                              </StatusBadge>
+                            )}
+                          </Td>
+                          <Td>
+                            {!violation.resolved && (
+                              <ActionButton onClick={() => handleResolveViolation(violation._id)}>
+                                <CheckCircle size={12} />
+                                Resolve
+                              </ActionButton>
+                            )}dmin</AdminBadge>
+                            ) : (
+                              <UserBadge>User</UserBadge>
+                            )}
+                          </Td>
+                          <Td>{new Date(user.createdAt).toLocaleDateString()}</Td>
+                          <Td>
+                            <ActionButton onClick={() => handleToggleAdmin(user._id)}>
+                              {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
+                            </ActionButton>
+                            <DeleteButton onClick={() => handleDeleteUser(user._id)}>
+                              <Trash2 size={14} />
+                            </DeleteButton>
+                          </Td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </TableContainer>
+              )}
+
+              {activeTab === 'tickets' && (
+                <TableContainer>
+                  <Table>
+                    <thead>
+                      <tr>
+                        <Th>Subject</Th>
+                        <Th>User</Th>
+                        <Th>Category</Th>
+                        <Th>Priority</Th>
+                        <Th>Status</Th>
+                        <Th>Created</Th>
+                        <Th>Actions</Th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tickets.map((ticket) => (
+                        <tr key={ticket._id}>
+                          <Td>{ticket.subject}</Td>
+                          <Td>{ticket.userId.username}</Td>
+                          <Td>{ticket.category}</Td>
+                          <Td>
+                            <PriorityBadge $priority={ticket.priority}>
+                              {ticket.priority}
+                            </PriorityBadge>
+                          </Td>
+                          <Td>
+                            <Select
+                              value={ticket.status}
+                              onChange={(e) => handleUpdateTicketStatus(ticket._id, e.target.value)}
+                            >
+                              <option value="open">Open</option>
+                              <option value="in-progress">In Progress</option>
+                              <option value="waiting-on-user">Waiting on User</option>
+                              <option value="resolved">Resolved</option>
+                              <option value="closed">Closed</option>
+                            </Select>
+                          </Td>
+                          <Td>{new Date(ticket.createdAt).toLocaleDateString()}</Td>
+                          <Td>
+                            <ActionButton onClick={() => window.open(`/help/${ticket._id}`, '_blank')}>
+                              View
+                            </ActionButton>
+                          </Td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </TableContainer>
+              )}
+
+              {activeTab === 'clubs' && (
+                <TableContainer>
+                  <Table>
+                    <thead>
+                      <tr>
+                        <Th>Name</Th>
+                        <Th>Description</Th>
+                        <Th>Category</Th>
+                        <Th>Members</Th>
+                        <Th>Created</Th>
+                        <Th>Actions</Th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {clubs.map((club) => (
+                        <tr key={club._id}>
+                          <Td>{club.name}</Td>
+                          <Td>{club.description?.substring(0, 50)}...</Td>
+                          <Td>{club.category}</Td>
+                          <Td>{club.memberCount}</Td>
+                          <Td>{new Date(club.createdAt).toLocaleDateString()}</Td>
+                          <Td>
+                            <DeleteButton onClick={() => handleDeleteClub(club._id)}>
+                              <Trash2 size={14} />
+                              Delete
+                            </DeleteButton>
+                          </Td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </TableContainer>
+              )}
+            </>
+          )}
+        </ContentWrapper>
+      </MainContent>
     </PageContainer>
   )
 }
@@ -909,6 +945,152 @@ const Tab = styled.button<{ $active: boolean }>`
   font-weight: 600;
   cursor: pointer;
   display: flex;
+const StatusBadge = styled.div<{ $color: string }>`
+  background: ${props => props.$color}20;
+  color: ${props => props.$color};
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  text-transform: capitalize;
+`
+
+const ViolationCount = styled.span`
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+`
+
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+`
+
+const ModalContent = styled.div`
+  background: rgba(20, 24, 45, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+`
+
+const ModalHeader = styled.div`
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+`
+
+const ModalTitle = styled.h2`
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+`
+
+const ModalBody = styled.div`
+  padding: 1.5rem;
+`
+
+const FormGroup = styled.div`
+  margin-bottom: 1.5rem;
+`
+
+const Label = styled.label`
+  display: block;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+`
+
+const Input = styled.input`
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+
+  &:focus {
+    outline: none;
+    border-color: rgba(139, 92, 246, 0.5);
+  }
+`
+
+const TextArea = styled.textarea`
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: rgba(139, 92, 246, 0.5);
+  }
+`
+
+const ModalFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+`
+
+const CancelButton = styled.button`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
+  }
+`
+
+const SubmitButton = styled.button`
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  }
+`
+
   align-items: center;
   gap: 0.5rem;
   transition: all 0.2s;
@@ -1011,7 +1193,7 @@ const UserBadge = styled.span`
 const PriorityBadge = styled.span<{ $priority: string }>`
   background: ${props => {
     switch (props.$priority) {
-      case 'urgent': case 'critical': return 'rgba(239, 68, 68, 0.2)'
+      case 'urgent': return 'rgba(239, 68, 68, 0.2)'
       case 'high': return 'rgba(245, 158, 11, 0.2)'
       case 'medium': return 'rgba(59, 130, 246, 0.2)'
       default: return 'rgba(107, 114, 128, 0.2)'
@@ -1019,7 +1201,7 @@ const PriorityBadge = styled.span<{ $priority: string }>`
   }};
   color: ${props => {
     switch (props.$priority) {
-      case 'urgent': case 'critical': return '#ef4444'
+      case 'urgent': return '#ef4444'
       case 'high': return '#f59e0b'
       case 'medium': return '#3b82f6'
       default: return '#6b7280'
@@ -1030,28 +1212,6 @@ const PriorityBadge = styled.span<{ $priority: string }>`
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: capitalize;
-`
-
-const StatusBadge = styled.div<{ $color: string }>`
-  background: ${props => props.$color}20;
-  color: ${props => props.$color};
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  text-transform: capitalize;
-`
-
-const ViolationCount = styled.span`
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  padding: 0.25rem 0.5rem;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
 `
 
 const ActionButton = styled.button`
@@ -1065,9 +1225,6 @@ const ActionButton = styled.button`
   cursor: pointer;
   transition: all 0.2s;
   margin-right: 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
 
   &:hover {
     background: rgba(99, 102, 241, 0.3);
@@ -1112,151 +1269,6 @@ const LoadingText = styled.div`
   text-align: center;
   color: rgba(255, 255, 255, 0.6);
   padding: 2rem;
-`
-
-const Modal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-`
-
-const ModalContent = styled.div`
-  background: rgba(20, 24, 45, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-`
-
-const ModalHeader = styled.div`
-  padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-`
-
-const ModalTitle = styled.h2`
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-`
-
-const ModalBody = styled.div`
-  padding: 1.5rem;
-`
-
-const FormGroup = styled.div`
-  margin-bottom: 1.5rem;
-`
-
-const Label = styled.label`
-  display: block;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-`
-
-const Input = styled.input`
-  width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 0.75rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.875rem;
-
-  &:focus {
-    outline: none;
-    border-color: rgba(139, 92, 246, 0.5);
-  }
-`
-
-const TextArea = styled.textarea`
-  width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 0.75rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.875rem;
-  resize: vertical;
-
-  &:focus {
-    outline: none;
-    border-color: rgba(139, 92, 246, 0.5);
-  }
-`
-
-const InfoText = styled.div`
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: rgba(59, 130, 246, 1);
-  padding: 0.75rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-`
-
-const HelpText = styled.div`
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.75rem;
-  margin-top: 0.5rem;
-  font-style: italic;
-`
-
-const ModalFooter = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-`
-
-const CancelButton = styled.button`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.9);
-  }
-`
-
-const SubmitButton = styled.button`
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border: none;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-  }
 `
 
 export default AdminDashboard

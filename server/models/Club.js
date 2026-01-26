@@ -112,6 +112,17 @@ const clubSchema = new mongoose.Schema({
     default: 0,
     min: [0, 'Violation count cannot be negative']
   },
+  isSuspended: {
+    type: Boolean,
+    default: false
+  },
+  suspensionEndDate: {
+    type: Date
+  },
+  suspensionReason: {
+    type: String,
+    maxlength: 500
+  },
   applicationForm: {
     enabled: {
       type: Boolean,

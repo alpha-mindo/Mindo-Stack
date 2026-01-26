@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const Club = require('../models/Club');
 const Ticket = require('../models/Ticket');
+const ClubViolation = require('../models/ClubViolation');
 const { adminMiddleware } = require('../middleware/auth');
 
 // All routes require admin authentication
@@ -26,6 +27,9 @@ router.get('/stats', async (req, res) => {
       createdAt: { $gte: sevenDaysAgo } 
     });
 
+    const suspendedClubs = await Club.countDocuments({ isSuspended: true });
+    const unresolvedViolations = await ClubViolation.countDocuments({ resolved: false });
+
     res.json({
       success: true,
       stats: {
@@ -34,7 +38,9 @@ router.get('/stats', async (req, res) => {
         totalTickets,
         openTickets,
         adminCount,
-        recentUsers
+        recentUsers,
+        suspendedClubs,
+        unresolvedViolations
       }
     });
   } catch (error) {
@@ -191,6 +197,7 @@ router.get('/clubs', async (req, res) => {
 
     const clubs = await Club.find(filter)
       .populate('ownerId', 'username email')
+      .select('name description category memberCount isSuspended violationCount suspensionEndDate createdAt')
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 });
@@ -239,6 +246,45 @@ router.delete('/clubs/:id', async (req, res) => {
       message: 'Error deleting club',
       error: error.message
     });
+  }
+});
+
+// @route   PATCH /api/admin/clubs/:clubId/suspension
+// @desc    Update club suspension duration
+// @access  Private (admin only)
+router.patch('/clubs/:clubId/suspension', async (req, res) => {
+  try {
+    const { clubId } = req.params;
+    const { suspensionDays, reason } = req.body;
+
+    const club = await Club.findById(clubId);
+    if (!club) {
+      return res.status(404).json({ error: 'Club not found' });
+    }
+
+    if (suspensionDays && suspensionDays > 0) {
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + parseInt(suspensionDays));
+      
+      club.isSuspended = true;
+      club.suspensionEndDate = endDate;
+      if (reason) {
+        club.suspensionReason = reason;
+      }
+
+      await club.save();
+
+      res.json({
+        success: true,
+        club,
+        message: `Suspension updated to ${suspensionDays} days`
+      });
+    } else {
+      return res.status(400).json({ error: 'Suspension days must be greater than 0' });
+    }
+  } catch (error) {
+    console.error('Error updating suspension:', error);
+    res.status(500).json({ error: 'Error updating suspension duration' });
   }
 });
 
