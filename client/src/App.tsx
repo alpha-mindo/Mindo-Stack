@@ -13,7 +13,8 @@ import ClubCreate from './pages/ClubCreate'
 import ClubDetails from './pages/ClubDetails'
 import ClubManage from './pages/ClubManage'
 import Events from './pages/Events'
-import Messages from './pages/Messages'
+import Memberships from './pages/Memberships'
+import ClubView from './pages/ClubView'
 import Profile from './pages/Profile'
 import Status from './pages/Status'
 import Help from './pages/Help'
@@ -128,9 +129,14 @@ function App() {
               <Events />
             </ProtectedRoute>
           } />
-          <Route path="/messages" element={
+          <Route path="/memberships" element={
             <ProtectedRoute>
-              <Messages />
+              <Memberships />
+            </ProtectedRoute>
+          } />
+          <Route path="/memberships/:clubId" element={
+            <ProtectedRoute>
+              <ClubView />
             </ProtectedRoute>
           } />
           <Route path="/profile" element={
