@@ -288,4 +288,64 @@ router.patch('/clubs/:clubId/suspension', async (req, res) => {
   }
 });
 
+// PATCH /api/admin/clubs/:clubId/unsuspend - Unsuspend a club
+router.patch('/clubs/:clubId/unsuspend', async (req, res) => {
+  try {
+    const { clubId } = req.params;
+
+    const club = await Club.findById(clubId);
+    if (!club) {
+      return res.status(404).json({ error: 'Club not found' });
+    }
+
+    club.isSuspended = false;
+    club.suspensionEndDate = null;
+    club.suspensionReason = null;
+
+    await club.save();
+
+    res.json({
+      success: true,
+      club,
+      message: 'Club suspension removed successfully'
+    });
+  } catch (error) {
+    console.error('Error unsuspending club:', error);
+    res.status(500).json({ error: 'Error removing club suspension' });
+  }
+});
+
+// PATCH /api/admin/violations/:violationId/resolve - Resolve a violation
+router.patch('/violations/:violationId/resolve', async (req, res) => {
+  try {
+    const { violationId } = req.params;
+    const { resolutionNotes } = req.body;
+
+    const ClubViolation = require('../models/ClubViolation');
+    
+    const violation = await ClubViolation.findById(violationId);
+    if (!violation) {
+      return res.status(404).json({ error: 'Violation not found' });
+    }
+
+    violation.resolved = true;
+    violation.resolvedAt = new Date();
+    violation.resolvedBy = req.user._id;
+    if (resolutionNotes) {
+      violation.resolutionNotes = resolutionNotes;
+    }
+
+    await violation.save();
+
+    res.json({
+      success: true,
+      violation,
+      message: 'Violation resolved successfully'
+    });
+  } catch (error) {
+    console.error('Error resolving violation:', error);
+    res.status(500).json({ error: 'Error resolving violation' });
+  }
+});
+
 module.exports = router;

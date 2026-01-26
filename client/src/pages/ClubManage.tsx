@@ -210,6 +210,27 @@ function ClubManage() {
     }
   }
 
+  const handleUpdateMemberRole = async (memberId: string, newRole: string) => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/api/clubs/${clubId}/members/${memberId}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: newRole })
+      })
+
+      if (!response.ok) throw new Error('Failed to update member role')
+      
+      fetchMembers()
+      alert('Member role updated successfully!')
+    } catch (err: any) {
+      alert('Error updating member role: ' + err.message)
+    }
+  }
+
   const handleCreateEvent = async () => {
     try {
       const token = localStorage.getItem('token')
@@ -385,6 +406,30 @@ function ClubManage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
+                <SectionTitle>Quick Actions</SectionTitle>
+                <QuickActionsGrid>
+                  <QuickActionCard onClick={() => navigate(`/clubs/${clubId}/events/manage`)}>
+                    <Calendar size={32} />
+                    <h3>Manage Events</h3>
+                    <p>Create, edit, and delete club events</p>
+                  </QuickActionCard>
+                  <QuickActionCard onClick={() => navigate(`/clubs/${clubId}/content/manage`)}>
+                    <MessageSquare size={32} />
+                    <h3>Manage Content</h3>
+                    <p>Upload and organize club files</p>
+                  </QuickActionCard>
+                  <QuickActionCard onClick={() => setActiveTab('members')}>
+                    <Users size={32} />
+                    <h3>Manage Members</h3>
+                    <p>View and manage member roles</p>
+                  </QuickActionCard>
+                  <QuickActionCard onClick={() => setActiveTab('settings')}>
+                    <Settings size={32} />
+                    <h3>Club Settings</h3>
+                    <p>Update club information</p>
+                  </QuickActionCard>
+                </QuickActionsGrid>
+
                 <SectionTitle>Club Statistics</SectionTitle>
                 <StatsGrid>
                   <StatCard>
@@ -464,11 +509,23 @@ function ClubManage() {
                           <MemberName>{member.userId.username}</MemberName>
                           <MemberEmail>{member.userId.email}</MemberEmail>
                           <MemberMeta>
-                            <RoleBadge $role={member.role}>
-                              {member.role === 'president' && <Crown size={14} />}
-                              {member.role === 'vice_president' && <Shield size={14} />}
-                              {member.role}
-                            </RoleBadge>
+                            {member.role === 'president' ? (
+                              <RoleBadge $role={member.role}>
+                                <Crown size={14} />
+                                president
+                              </RoleBadge>
+                            ) : (
+                              <RoleSelector
+                                value={member.role}
+                                onChange={(e) => handleUpdateMemberRole(member._id, e.target.value)}
+                              >
+                                <option value="member">Member</option>
+                                <option value="vice_president">Vice President</option>
+                                <option value="treasurer">Treasurer</option>
+                                <option value="secretary">Secretary</option>
+                                <option value="moderator">Moderator</option>
+                              </RoleSelector>
+                            )}
                             <JoinDate>Joined {new Date(member.joinedAt).toLocaleDateString()}</JoinDate>
                           </MemberMeta>
                         </MemberDetails>
@@ -913,6 +970,49 @@ const StatsGrid = styled.div`
   gap: 1rem;
 `
 
+const QuickActionsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+`
+
+const QuickActionCard = styled.div`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(99, 102, 241, 0.1);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+  }
+
+  svg {
+    color: #a78bfa;
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+  }
+
+  p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+    margin: 0;
+    line-height: 1.4;
+  }
+`
+
 const StatCard = styled.div`
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1062,6 +1162,34 @@ const RoleBadge = styled.div<{ $role: string }>`
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: capitalize;
+`
+
+const RoleSelector = styled.select`
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 6px;
+  color: #a78bfa;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  option {
+    background: rgba(15, 23, 42, 1);
+    color: #ffffff;
+  }
 `
 
 const JoinDate = styled.div`

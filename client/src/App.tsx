@@ -12,9 +12,13 @@ import Clubs from './pages/Clubs'
 import ClubCreate from './pages/ClubCreate'
 import ClubDetails from './pages/ClubDetails'
 import ClubManage from './pages/ClubManage'
+import EventManage from './pages/EventManage'
+import ContentManage from './pages/ContentManage'
 import Events from './pages/Events'
 import Memberships from './pages/Memberships'
 import ClubView from './pages/ClubView'
+import Applications from './pages/Applications'
+import Invitations from './pages/Invitations'
 import Profile from './pages/Profile'
 import Status from './pages/Status'
 import Help from './pages/Help'
@@ -130,6 +134,26 @@ function App() {
           <Route path="/clubs/:clubId/manage" element={
             <ProtectedRoute>
               <ClubManage />
+            </ProtectedRoute>
+          } />
+          <Route path="/clubs/:clubId/events/manage" element={
+            <ProtectedRoute>
+              <EventManage />
+            </ProtectedRoute>
+          } />
+          <Route path="/clubs/:clubId/content/manage" element={
+            <ProtectedRoute>
+              <ContentManage />
+            </ProtectedRoute>
+          } />
+          <Route path="/applications" element={
+            <ProtectedRoute>
+              <Applications />
+            </ProtectedRoute>
+          } />
+          <Route path="/invitations" element={
+            <ProtectedRoute>
+              <Invitations />
             </ProtectedRoute>
           } />
           <Route path="/events" element={

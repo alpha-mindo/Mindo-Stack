@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { motion } from 'framer-motion'
-import { Home, Users, Calendar, Building2, LogOut, User, Compass, HelpCircle, Shield, LucideIcon } from 'lucide-react'
+import { Home, Users, Calendar, Building2, LogOut, User, Compass, HelpCircle, Shield, LucideIcon, FileText, Mail } from 'lucide-react'
 import styled from 'styled-components'
 import { API_URL } from '../config'
 
@@ -276,6 +276,8 @@ function Navbar() {
     { id: 'clubs', label: 'My Clubs', icon: Users, path: '/clubs' },
     { id: 'events', label: 'Events', icon: Calendar, path: '/events' },
     { id: 'memberships', label: 'Memberships', icon: Building2, path: '/memberships' },
+    { id: 'applications', label: 'Applications', icon: FileText, path: '/applications' },
+    { id: 'invitations', label: 'Invitations', icon: Mail, path: '/invitations' },
     { id: 'help', label: 'Help', icon: HelpCircle, path: '/help' }
   ]
 
