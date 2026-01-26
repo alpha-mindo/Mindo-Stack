@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { ArrowLeft, Plus, Edit, Trash2, Calendar, MapPin, Users, DollarSign } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config';
 
 interface Event {
   _id: string;
@@ -23,7 +21,6 @@ interface Event {
 
 export default function EventManage() {
   const { clubId } = useParams();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
