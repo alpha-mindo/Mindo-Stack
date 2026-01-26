@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { motion } from 'framer-motion'
 import { Home, Users, Calendar, MessageSquare, LogOut, User, Compass, LucideIcon } from 'lucide-react'
 import styled from 'styled-components'
+import { API_URL } from '../config'
 
 interface NavigationItem {
   id: string
@@ -337,7 +338,7 @@ function Navbar() {
           transition={{ duration: 0.15 }}
         >
           {user?.profilePicture ? (
-            <UserAvatar src={`http://localhost:5000${user.profilePicture}`} alt={user.username} />
+            <UserAvatar src={`${API_URL}${user.profilePicture}`} alt={user.username} />
           ) : (
             <UserAvatarPlaceholder>
               <User />

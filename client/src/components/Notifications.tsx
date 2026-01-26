@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, MouseEvent } from 'react'
 import './Notifications.css'
+import { API_URL } from '../config'
 
 interface Notification {
   _id: string
@@ -27,7 +28,7 @@ function Notifications(_props: NotificationsProps = { isFixed: true }) {
       const token = localStorage.getItem('token')
       if (!token) return
       
-      const response = await fetch('http://localhost:5000/api/notifications/unread-count', {
+      const response = await fetch(`${API_URL}/api/notifications/unread-count`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -61,7 +62,7 @@ function Notifications(_props: NotificationsProps = { isFixed: true }) {
         return
       }
       
-      const response = await fetch('http://localhost:5000/api/notifications?limit=10', {
+      const response = await fetch(`${API_URL}/api/notifications?limit=10`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -94,7 +95,7 @@ function Notifications(_props: NotificationsProps = { isFixed: true }) {
       const token = localStorage.getItem('token')
       if (!token) return
       
-      await fetch(`http://localhost:5000/api/notifications/${notificationId}/read`, {
+      await fetch(`${API_URL}/api/notifications/${notificationId}/read`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -116,7 +117,7 @@ function Notifications(_props: NotificationsProps = { isFixed: true }) {
       const token = localStorage.getItem('token')
       if (!token) return
       
-      await fetch('http://localhost:5000/api/notifications/mark-all-read', {
+      await fetch(`${API_URL}/api/notifications/mark-all-read`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -136,7 +137,7 @@ function Notifications(_props: NotificationsProps = { isFixed: true }) {
       const token = localStorage.getItem('token')
       if (!token) return
       
-      await fetch(`http://localhost:5000/api/notifications/${notificationId}`, {
+      await fetch(`${API_URL}/api/notifications/${notificationId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

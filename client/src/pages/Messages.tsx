@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { MessageSquare, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
+import { API_URL } from '../config'
 
 interface Announcement {
   _id: string
@@ -31,7 +32,7 @@ function Messages() {
   const fetchAnnouncements = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5000/api/announcements/my-announcements', {
+      const response = await fetch(`${API_URL}/api/announcements/my-announcements`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

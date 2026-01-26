@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Search, Filter, Users, TrendingUp, Plus, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
+import { API_URL } from '../config'
 
 interface Club {
   _id: string
@@ -41,7 +42,7 @@ function Discover() {
   const fetchClubs = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5000/api/clubs', {
+      const response = await fetch(`${API_URL}/api/clubs`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

@@ -6,6 +6,7 @@ import { User, Mail, Edit2, Save, X, Key, LogOut, Camera } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
+import { API_URL } from '../config'
 
 interface ProfileData {
   username: string
@@ -70,7 +71,7 @@ function Profile() {
         const formDataFile = new FormData()
         formDataFile.append('profilePicture', selectedFile)
         
-        const uploadResponse = await fetch('http://localhost:5000/api/users/upload-profile-picture', {
+        const uploadResponse = await fetch(`${API_URL}/api/users/upload-profile-picture`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -84,7 +85,7 @@ function Profile() {
       }
 
       // Update profile with new data
-      const response = await fetch(`http://localhost:5000/api/users/${user?.id}`, {
+      const response = await fetch(`${API_URL}/api/users/${user?.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

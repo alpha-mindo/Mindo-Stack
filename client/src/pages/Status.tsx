@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './Auth.css'
+import { API_URL } from '../config'
 
 interface StatusData {
   server: string
@@ -18,7 +19,7 @@ const Status = () => {
 
   const fetchStatus = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/status')
+      const response = await fetch(`${API_URL}/api/status`)
       if (!response.ok) throw new Error('Failed to fetch status')
       const data = await response.json()
       setStatus(data)

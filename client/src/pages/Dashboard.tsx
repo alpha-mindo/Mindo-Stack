@@ -6,6 +6,7 @@ import { Users, Calendar, Plus, Award, Bell } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
+import { API_URL } from '../config'
 
 interface DashboardStats {
   totalClubs: number
@@ -42,7 +43,7 @@ function Dashboard() {
       const token = localStorage.getItem('token')
       
       // Fetch clubs data
-      const clubsResponse = await fetch('http://localhost:5000/api/clubs/my-clubs', {
+      const clubsResponse = await fetch(`${API_URL}/api/clubs/my-clubs`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (clubsResponse.ok) {
@@ -53,7 +54,7 @@ function Dashboard() {
       }
 
       // Fetch events data
-      const eventsResponse = await fetch('http://localhost:5000/api/clubs/my-events', {
+      const eventsResponse = await fetch(`${API_URL}/api/clubs/my-events`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (eventsResponse.ok) {
@@ -64,7 +65,7 @@ function Dashboard() {
       }
 
       // Fetch announcements data
-      const announcementsResponse = await fetch('http://localhost:5000/api/announcements/my-announcements', {
+      const announcementsResponse = await fetch(`${API_URL}/api/announcements/my-announcements`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (announcementsResponse.ok) {

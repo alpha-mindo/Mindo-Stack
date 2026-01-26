@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Users, Plus, Crown } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
+import { API_URL } from '../config'
 
 interface Club {
   _id: string
@@ -29,7 +30,7 @@ function Clubs() {
   const fetchClubs = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5000/api/clubs/my-clubs', {
+      const response = await fetch(`${API_URL}/api/clubs/my-clubs`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

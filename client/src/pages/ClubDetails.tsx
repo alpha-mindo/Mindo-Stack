@@ -6,6 +6,7 @@ import { ArrowLeft, Users, Calendar, MessageSquare, Info, Settings, UserPlus, Ch
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
+import { API_URL } from '../config'
 
 interface Club {
   _id: string
@@ -57,7 +58,7 @@ function ClubDetails() {
       const token = localStorage.getItem('token')
       
       // Fetch club details
-      const clubResponse = await fetch(`http://localhost:5000/api/clubs/${clubId}`, {
+      const clubResponse = await fetch(`${API_URL}/api/clubs/${clubId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
@@ -68,7 +69,7 @@ function ClubDetails() {
       setIsOwner(clubData.data.ownerId === user?.id)
 
       // Fetch members
-      const membersResponse = await fetch(`http://localhost:5000/api/clubs/${clubId}/members`, {
+      const membersResponse = await fetch(`${API_URL}/api/clubs/${clubId}/members`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
@@ -161,7 +162,7 @@ function ClubDetails() {
           >
             <ClubInfo>
               {club.logo ? (
-                <ClubLogo src={`http://localhost:5000${club.logo}`} alt={club.name} />
+                <ClubLogo src={`${API_URL}${club.logo}`} alt={club.name} />
               ) : (
                 <ClubLogoPlaceholder>
                   {club.name.charAt(0).toUpperCase()}
@@ -285,7 +286,7 @@ function ClubDetails() {
                   {members.map(member => (
                     <MemberCard key={member._id}>
                       {member.userId.profilePicture ? (
-                        <MemberAvatar src={`http://localhost:5000${member.userId.profilePicture}`} alt={member.userId.username} />
+                        <MemberAvatar src={`${API_URL}${member.userId.profilePicture}`} alt={member.userId.username} />
                       ) : (
                         <MemberAvatarPlaceholder>
                           <Users size={20} />

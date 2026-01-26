@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Calendar, MapPin, Clock, Users as UsersIcon } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
+import { API_URL } from '../config'
 
 interface Event {
   _id: string
@@ -34,7 +35,7 @@ function Events() {
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5000/api/clubs/my-events', {
+      const response = await fetch(`${API_URL}/api/clubs/my-events`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

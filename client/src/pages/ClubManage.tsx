@@ -9,6 +9,7 @@ import {
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
 import FormBuilder, { FormQuestion } from '../components/FormBuilder'
+import { API_URL } from '../config'
 
 interface Club {
   _id: string
@@ -56,7 +57,7 @@ function ClubManage() {
   const fetchClubData = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5000/api/clubs/${clubId}`, {
+      const response = await fetch(`${API_URL}/api/clubs/${clubId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -76,7 +77,7 @@ function ClubManage() {
   const fetchMembers = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5000/api/clubs/${clubId}/members`, {
+      const response = await fetch(`${API_URL}/api/clubs/${clubId}/members`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -94,7 +95,7 @@ function ClubManage() {
   const handleUpdateClub = async (updates: Partial<Club>) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5000/api/clubs/${clubId}`, {
+      const response = await fetch(`${API_URL}/api/clubs/${clubId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +119,7 @@ function ClubManage() {
 
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5000/api/clubs/${clubId}/members/${memberId}`, {
+      const response = await fetch(`${API_URL}/api/clubs/${clubId}/members/${memberId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -287,7 +288,7 @@ function ClubManage() {
                     <MemberCard key={member._id}>
                       <MemberInfo>
                         {member.userId.profilePicture ? (
-                          <MemberAvatar src={`http://localhost:5000${member.userId.profilePicture}`} />
+                          <MemberAvatar src={`${API_URL}${member.userId.profilePicture}`} />
                         ) : (
                           <MemberAvatarPlaceholder>
                             {member.userId.username[0].toUpperCase()}

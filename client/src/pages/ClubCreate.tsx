@@ -6,6 +6,7 @@ import { ArrowLeft, Upload, X, Plus } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
 import FormBuilder, { FormQuestion } from '../components/FormBuilder'
+import { API_URL } from '../config'
 
 interface ClubFormData {
   name: string
@@ -102,7 +103,7 @@ function ClubCreate() {
         const formDataFile = new FormData()
         formDataFile.append('profilePicture', selectedFile)
         
-        const uploadResponse = await fetch('http://localhost:5000/api/users/upload-profile-picture', {
+        const uploadResponse = await fetch(`${API_URL}/api/users/upload-profile-picture`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -116,7 +117,7 @@ function ClubCreate() {
       }
 
       // Create club
-      const response = await fetch('http://localhost:5000/api/clubs', {
+      const response = await fetch(`${API_URL}/api/clubs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

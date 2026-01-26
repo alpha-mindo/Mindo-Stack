@@ -1,1 +1,24 @@
 *.md
+
+# Environment variables
+client/.env
+client/.env.local
+server/.env
+.env
+
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build outputs
+client/dist/
+server/dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
