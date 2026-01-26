@@ -10,6 +10,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // JWT Secret (should be in .env file)
 const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d';
 
 if (!JWT_SECRET) {
   console.error('FATAL: JWT_SECRET is not defined in environment variables');
@@ -136,7 +137,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, username: user.username, isAdmin: user.isAdmin },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: JWT_EXPIRY }
     );
 
     res.json({
@@ -310,7 +311,7 @@ router.post('/reset-password/:resetToken', async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, username: user.username, isAdmin: user.isAdmin },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: JWT_EXPIRY }
     );
 
     res.json({

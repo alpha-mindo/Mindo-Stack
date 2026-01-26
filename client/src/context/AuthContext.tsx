@@ -32,6 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
+  const INACTIVITY_TIMEOUT = 5 * 60 * 1000 // 5 minutes in milliseconds
 
   useEffect(() => {
     // Set axios default header if token exists
@@ -45,6 +46,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     setLoading(false)
   }, [token])
+
+  // Auto-logout after inactivity
+  useEffect(() => {
+    if (!user) return
+
+    let inactivityTimer: NodeJS.Timeout
+
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer)
+      inactivityTimer = setTimeout(() => {
+        logout()
+        alert('You have been logged out due to inactivity')
+      }, INACTIVITY_TIMEOUT)
+    }
+
+    // Track user activity
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
+    
+    activityEvents.forEach(event => {
+      window.addEventListener(event, resetTimer)
+    })
+
+    // Start the timer
+    resetTimer()
+
+    // Cleanup
+    return () => {
+      clearTimeout(inactivityTimer)
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, resetTimer)
+      })
+    }
+  }, [user])
 
   const signup = async (username: string, email: string, password: string): Promise<AuthResponse> => {
     try {
