@@ -9,7 +9,12 @@ const User = require('../models/User');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // JWT Secret (should be in .env file)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET is not defined in environment variables');
+  process.exit(1);
+}
 
 // POST /api/auth/signup - Register new user
 router.post('/signup', async (req, res) => {
@@ -20,6 +25,33 @@ router.post('/signup', async (req, res) => {
     if (!username || !email || !password) {
       return res.status(400).json({ 
         error: 'Please provide username, email, and password' 
+      });
+    }
+
+    // Password strength validation
+    if (password.length < 8) {
+      return res.status(400).json({ 
+        error: 'Password must be at least 8 characters long' 
+      });
+    }
+    if (!/[A-Z]/.test(password)) {
+      return res.status(400).json({ 
+        error: 'Password must contain at least one uppercase letter' 
+      });
+    }
+    if (!/[a-z]/.test(password)) {
+      return res.status(400).json({ 
+        error: 'Password must contain at least one lowercase letter' 
+      });
+    }
+    if (!/[0-9]/.test(password)) {
+      return res.status(400).json({ 
+        error: 'Password must contain at least one number' 
+      });
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      return res.status(400).json({ 
+        error: 'Password must contain at least one special character' 
       });
     }
 

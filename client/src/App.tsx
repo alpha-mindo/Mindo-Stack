@@ -82,8 +82,16 @@ function App() {
               <Signup />
             </PublicRoute>
           } />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:resetToken" element={<ResetPassword />} />
+          <Route path="/forgot-password" element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          } />
+          <Route path="/reset-password/:resetToken" element={
+            <PublicRoute>
+              <ResetPassword />
+            </PublicRoute>
+          } />
           <Route path="/api" element={
             <AdminRoute>
               <Status />
