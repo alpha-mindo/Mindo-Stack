@@ -10,6 +10,7 @@ interface NavigationItem {
   label: string
   icon: LucideIcon
   path: string
+  section?: 'main' | 'clubs' | 'community' | 'admin'
 }
 
 const SidebarContainer = styled(motion.div)`
@@ -137,6 +138,22 @@ const NavLabel = styled(motion.span)`
   white-space: nowrap;
   flex: 1;
   text-align: left;
+`
+
+const NavSeparator = styled.div`
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0.75rem 1rem;
+`
+
+const SectionLabel = styled.div`
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 0.25rem;
 `
 
 const ActiveIndicator = styled(motion.div)`
@@ -271,22 +288,35 @@ function Navbar() {
   }
 
   const navigationItems: NavigationItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
-    { id: 'discover', label: 'Discover', icon: Compass, path: '/discover' },
-    { id: 'clubs', label: 'My Clubs', icon: Users, path: '/clubs' },
-    { id: 'events', label: 'Events', icon: Calendar, path: '/events' },
-    { id: 'memberships', label: 'Memberships', icon: Building2, path: '/memberships' },
-    { id: 'applications', label: 'Applications', icon: FileText, path: '/applications' },
-    { id: 'invitations', label: 'Invitations', icon: Mail, path: '/invitations' },
-    { id: 'help', label: 'Help', icon: HelpCircle, path: '/help' }
+    // Main Navigation
+    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard', section: 'main' },
+    { id: 'discover', label: 'Discover', icon: Compass, path: '/discover', section: 'main' },
+    
+    // My Clubs Section
+    { id: 'clubs', label: 'My Clubs', icon: Users, path: '/clubs', section: 'clubs' },
+    { id: 'memberships', label: 'Memberships', icon: Building2, path: '/memberships', section: 'clubs' },
+    { id: 'events', label: 'Events', icon: Calendar, path: '/events', section: 'clubs' },
+    
+    // Community Section
+    { id: 'applications', label: 'Applications', icon: FileText, path: '/applications', section: 'community' },
+    { id: 'invitations', label: 'Invitations', icon: Mail, path: '/invitations', section: 'community' },
+    
+    // Support
+    { id: 'help', label: 'Help', icon: HelpCircle, path: '/help', section: 'main' }
   ]
 
   // Add admin link if user is admin
   const adminItems: NavigationItem[] = user?.isAdmin ? [
-    { id: 'admin', label: 'Admin', icon: Shield, path: '/admin' }
+    { id: 'admin', label: 'Admin Panel', icon: Shield, path: '/admin', section: 'admin' }
   ] : []
 
   const allItems = [...navigationItems, ...adminItems]
+
+  // Group items by section
+  const mainItems = allItems.filter(item => item.section === 'main')
+  const clubItems = allItems.filter(item => item.section === 'clubs')
+  const communityItems = allItems.filter(item => item.section === 'community')
+  const adminNavItems = allItems.filter(item => item.section === 'admin')
 
   const isActive = (path: string) => location.pathname === path
 
@@ -313,7 +343,8 @@ function Navbar() {
 
       {/* Navigation Items */}
       <SidebarNav>
-        {allItems.map((item) => (
+        {/* Main Section */}
+        {mainItems.map((item) => (
           <NavItem
             key={item.id}
             $isActive={isActive(item.path)}
@@ -336,6 +367,99 @@ function Navbar() {
             )}
           </NavItem>
         ))}
+
+        {/* Clubs Section */}
+        {clubItems.length > 0 && (
+          <>
+            <NavSeparator />
+            <SectionLabel>My Clubs</SectionLabel>
+            {clubItems.map((item) => (
+              <NavItem
+                key={item.id}
+                $isActive={isActive(item.path)}
+                onClick={() => navigate(item.path)}
+                whileHover={{ x: 2 }}
+                whileTap={{ scale: 0.99 }}
+                transition={{ duration: 0.15 }}
+              >
+                <NavIcon $isActive={isActive(item.path)}>
+                  <item.icon />
+                </NavIcon>
+                <NavLabel>
+                  {item.label}
+                </NavLabel>
+                {isActive(item.path) && (
+                  <ActiveIndicator
+                    layoutId="activeIndicator"
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  />
+                )}
+              </NavItem>
+            ))}
+          </>
+        )}
+
+        {/* Community Section */}
+        {communityItems.length > 0 && (
+          <>
+            <NavSeparator />
+            <SectionLabel>Community</SectionLabel>
+            {communityItems.map((item) => (
+              <NavItem
+                key={item.id}
+                $isActive={isActive(item.path)}
+                onClick={() => navigate(item.path)}
+                whileHover={{ x: 2 }}
+                whileTap={{ scale: 0.99 }}
+                transition={{ duration: 0.15 }}
+              >
+                <NavIcon $isActive={isActive(item.path)}>
+                  <item.icon />
+                </NavIcon>
+                <NavLabel>
+                  {item.label}
+                </NavLabel>
+                {isActive(item.path) && (
+                  <ActiveIndicator
+                    layoutId="activeIndicator"
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  />
+                )}
+              </NavItem>
+            ))}
+          </>
+        )}
+
+        {/* Admin Section */}
+        {adminNavItems.length > 0 && (
+          <>
+            <NavSeparator />
+            <SectionLabel>Administration</SectionLabel>
+            {adminNavItems.map((item) => (
+              <NavItem
+                key={item.id}
+                $isActive={isActive(item.path)}
+                onClick={() => navigate(item.path)}
+                whileHover={{ x: 2 }}
+                whileTap={{ scale: 0.99 }}
+                transition={{ duration: 0.15 }}
+              >
+                <NavIcon $isActive={isActive(item.path)}>
+                  <item.icon />
+                </NavIcon>
+                <NavLabel>
+                  {item.label}
+                </NavLabel>
+                {isActive(item.path) && (
+                  <ActiveIndicator
+                    layoutId="activeIndicator"
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  />
+                )}
+              </NavItem>
+            ))}
+          </>
+        )}
       </SidebarNav>
 
       {/* Footer Section */}
