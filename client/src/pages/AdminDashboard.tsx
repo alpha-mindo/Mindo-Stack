@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { Users, BarChart3, Ticket, Building2, Shield, Trash2, AlertTriangle, Ban, CheckCircle, Clock } from 'lucide-react'
+import { Users, BarChart3, Ticket, Building2, Shield, Trash2, AlertTriangle, Ban, CheckCircle, Clock, UserPlus, Search } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
 import { API_URL } from '../config'
@@ -77,7 +77,15 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [showViolationModal, setShowViolationModal] = useState(false)
   const [showSuspensionModal, setShowSuspensionModal] = useState(false)
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false)
   const [selectedClub, setSelectedClub] = useState<Club | null>(null)
+  const [userSearch, setUserSearch] = useState('')
+  const [createUserForm, setCreateUserForm] = useState({
+    username: '',
+    email: '',
+    password: '',
+    isAdmin: false
+  })
   const [violationForm, setViolationForm] = useState({
     violationType: 'Inappropriate Content',
     severity: 'medium',
@@ -213,9 +221,51 @@ function AdminDashboard() {
 
       if (response.ok) {
         fetchUsers()
+        alert('User deleted successfully')
       }
     } catch (err) {
       alert('Error deleting user')
+    }
+  }
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!createUserForm.username || !createUserForm.email || !createUserForm.password) {
+      alert('Please fill in all fields')
+      return
+    }
+
+    // Validate password requirements
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/
+    if (!passwordRegex.test(createUserForm.password)) {
+      alert('Password must be at least 8 characters and contain uppercase, lowercase, number, and special character')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(createUserForm)
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert('User created successfully')
+        setShowCreateUserModal(false)
+        setCreateUserForm({ username: '', email: '', password: '', isAdmin: false })
+        fetchUsers()
+      } else {
+        alert(data.message || 'Error creating user')
+      }
+    } catch (err) {
+      alert('Error creating user')
     }
   }
 
@@ -485,43 +535,81 @@ function AdminDashboard() {
               )}
 
               {activeTab === 'users' && (
-                <TableContainer>
-                  <Table>
-                    <thead>
-                      <tr>
-                        <Th>Username</Th>
-                        <Th>Email</Th>
-                        <Th>Role</Th>
-                        <Th>Joined</Th>
-                        <Th>Actions</Th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((user) => (
-                        <tr key={user._id}>
-                          <Td>{user.username}</Td>
-                          <Td>{user.email}</Td>
-                          <Td>
-                            {user.isAdmin ? (
-                              <AdminBadge>Admin</AdminBadge>
-                            ) : (
-                              <UserBadge>User</UserBadge>
-                            )}
-                          </Td>
-                          <Td>{new Date(user.createdAt).toLocaleDateString()}</Td>
-                          <Td>
-                            <ActionButton onClick={() => handleToggleAdmin(user._id)}>
-                              {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
-                            </ActionButton>
-                            <DeleteButton onClick={() => handleDeleteUser(user._id)}>
-                              <Trash2 size={14} />
-                            </DeleteButton>
-                          </Td>
+                <>
+                  <TableHeader>
+                    <SearchContainer>
+                      <Search size={18} />
+                      <SearchInput
+                        type="text"
+                        placeholder="Search users by username or email..."
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                      />
+                    </SearchContainer>
+                    <CreateButton onClick={() => setShowCreateUserModal(true)}>
+                      <UserPlus size={18} />
+                      Create User
+                    </CreateButton>
+                  </TableHeader>
+                  <TableContainer>
+                    <Table>
+                      <thead>
+                        <tr>
+                          <Th>Username</Th>
+                          <Th>Email</Th>
+                          <Th>Role</Th>
+                          <Th>Joined</Th>
+                          <Th>Actions</Th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </TableContainer>
+                      </thead>
+                      <tbody>
+                        {users
+                          .filter(user =>
+                            user.username.toLowerCase().includes(userSearch.toLowerCase()) ||
+                            user.email.toLowerCase().includes(userSearch.toLowerCase())
+                          )
+                          .map((user) => (
+                            <tr key={user._id}>
+                              <Td>
+                                <UserInfo>
+                                  <UserAvatar>{user.username.charAt(0).toUpperCase()}</UserAvatar>
+                                  <span>{user.username}</span>
+                                </UserInfo>
+                              </Td>
+                              <Td>{user.email}</Td>
+                              <Td>
+                                {user.isAdmin ? (
+                                  <AdminBadge><Shield size={12} /> Admin</AdminBadge>
+                                ) : (
+                                  <UserBadge>User</UserBadge>
+                                )}
+                              </Td>
+                              <Td>{new Date(user.createdAt).toLocaleDateString()}</Td>
+                              <Td>
+                                <ActionsGroup>
+                                  <ActionButton onClick={() => handleToggleAdmin(user._id)}>
+                                    {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
+                                  </ActionButton>
+                                  <DeleteButton onClick={() => handleDeleteUser(user._id)}>
+                                    <Trash2 size={14} />
+                                  </DeleteButton>
+                                </ActionsGroup>
+                              </Td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </Table>
+                    {users.filter(user =>
+                      user.username.toLowerCase().includes(userSearch.toLowerCase()) ||
+                      user.email.toLowerCase().includes(userSearch.toLowerCase())
+                    ).length === 0 && (
+                      <EmptyState>
+                        <Users size={48} />
+                        <p>No users found</p>
+                      </EmptyState>
+                    )}
+                  </TableContainer>
+                </>
               )}
 
               {activeTab === 'tickets' && (
@@ -828,6 +916,80 @@ function AdminDashboard() {
           </ModalContent>
         </Modal>
       )}
+
+      {/* Create User Modal */}
+      {showCreateUserModal && (
+        <Modal onClick={() => setShowCreateUserModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>
+                <UserPlus size={20} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+                Create New User
+              </ModalTitle>
+            </ModalHeader>
+            <ModalBody>
+              <form onSubmit={handleCreateUser}>
+                <FormGroup>
+                  <Label>Username</Label>
+                  <Input
+                    type="text"
+                    value={createUserForm.username}
+                    onChange={(e) => setCreateUserForm({...createUserForm, username: e.target.value})}
+                    placeholder="Enter username"
+                    required
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={createUserForm.email}
+                    onChange={(e) => setCreateUserForm({...createUserForm, email: e.target.value})}
+                    placeholder="Enter email address"
+                    required
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>Password</Label>
+                  <Input
+                    type="password"
+                    value={createUserForm.password}
+                    onChange={(e) => setCreateUserForm({...createUserForm, password: e.target.value})}
+                    placeholder="Enter password"
+                    required
+                  />
+                  <HelpText>
+                    Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                  </HelpText>
+                </FormGroup>
+
+                <FormGroup>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={createUserForm.isAdmin}
+                      onChange={(e) => setCreateUserForm({...createUserForm, isAdmin: e.target.checked})}
+                    />
+                    <span>Make this user an admin</span>
+                  </CheckboxLabel>
+                </FormGroup>
+
+                <ModalFooter>
+                  <CancelButton type="button" onClick={() => setShowCreateUserModal(false)}>
+                    Cancel
+                  </CancelButton>
+                  <SubmitButton type="submit">
+                    <UserPlus size={16} style={{ verticalAlign: 'middle', marginRight: '0.25rem' }} />
+                    Create User
+                  </SubmitButton>
+                </ModalFooter>
+              </form>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
     </PageContainer>
   )
 }
@@ -997,6 +1159,9 @@ const AdminBadge = styled.span`
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 `
 
 const UserBadge = styled.span`
@@ -1006,6 +1171,121 @@ const UserBadge = styled.span`
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
+`
+
+const TableHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+`
+
+const SearchContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  flex: 1;
+  min-width: 250px;
+  max-width: 400px;
+
+  svg {
+    color: rgba(255, 255, 255, 0.5);
+  }
+`
+
+const SearchInput = styled.input`
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  flex: 1;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+`
+
+const CreateButton = styled(motion.button)`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+`
+
+const UserInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`
+
+const UserAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+`
+
+const ActionsGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+`
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 4rem 2rem;
+  color: rgba(255, 255, 255, 0.5);
+
+  svg {
+    margin-bottom: 1rem;
+    opacity: 0.3;
+  }
+
+  p {
+    font-size: 1rem;
+    margin: 0;
+  }
+`
+
+
+
+const CheckboxLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
 `
 
 const PriorityBadge = styled.span<{ $priority: string }>`
