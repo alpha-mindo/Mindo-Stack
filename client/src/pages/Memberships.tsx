@@ -36,10 +36,13 @@ function Memberships() {
 
       if (response.ok) {
         const data = await response.json()
-        setClubs(data.memberships)
+        setClubs(data.memberships || [])
+      } else {
+        setClubs([])
       }
     } catch (err) {
       console.error('Error fetching memberships:', err)
+      setClubs([])
     } finally {
       setLoading(false)
     }
@@ -68,7 +71,7 @@ function Memberships() {
 
           {loading ? (
             <LoadingText>Loading your memberships...</LoadingText>
-          ) : clubs.length === 0 ? (
+          ) : !clubs || clubs.length === 0 ? (
             <EmptyState
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
