@@ -1,4 +1,5 @@
 *.md
+*.sh
 
 # Environment variables
 client/.env
