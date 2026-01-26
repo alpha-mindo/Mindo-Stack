@@ -4,7 +4,8 @@ import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import { 
   ArrowLeft, Users, Settings, Calendar, MessageSquare, 
-  UserPlus, UserMinus, Crown, Shield, Edit, Trash2, Plus 
+  UserPlus, UserMinus, Crown, Shield, Trash2, Plus,
+  MapPin, X
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Notifications from '../components/Notifications'
@@ -38,19 +39,59 @@ interface Member {
   joinedAt: string
 }
 
+interface Event {
+  _id: string
+  name: string
+  description: string
+  startDate: string
+  endDate: string
+  location: string
+  capacity?: number
+  signups: string[]
+}
+
+interface Announcement {
+  _id: string
+  title: string
+  content: string
+  type: 'announcement' | 'poll' | 'form'
+  announcerName: string
+  createdAt: string
+  isPinned: boolean
+}
+
 function ClubManage() {
   const navigate = useNavigate()
   const { clubId } = useParams<{ clubId: string }>()
   const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'events' | 'announcements' | 'settings'>('overview')
   const [club, setClub] = useState<Club | null>(null)
   const [members, setMembers] = useState<Member[]>([])
+  const [events, setEvents] = useState<Event[]>([])
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [showEventModal, setShowEventModal] = useState(false)
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
+  const [eventForm, setEventForm] = useState({
+    name: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    location: '',
+    capacity: ''
+  })
+  const [announcementForm, setAnnouncementForm] = useState({
+    title: '',
+    content: '',
+    type: 'announcement' as 'announcement' | 'poll' | 'form'
+  })
 
   useEffect(() => {
     if (clubId) {
       fetchClubData()
       fetchMembers()
+      fetchEvents()
+      fetchAnnouncements()
     }
   }, [clubId])
 
@@ -89,6 +130,40 @@ function ClubManage() {
       setMembers(data.members || [])
     } catch (err: any) {
       console.error('Error fetching members:', err)
+    }
+  }
+
+  const fetchEvents = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/api/clubs/${clubId}/trips`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setEvents(data.trips || [])
+      }
+    } catch (err: any) {
+      console.error('Error fetching events:', err)
+    }
+  }
+
+  const fetchAnnouncements = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/api/clubs/${clubId}/announcements`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setAnnouncements(data.announcements || [])
+      }
+    } catch (err: any) {
+      console.error('Error fetching announcements:', err)
     }
   }
 
@@ -132,6 +207,97 @@ function ClubManage() {
       alert('Member removed successfully!')
     } catch (err: any) {
       alert('Error removing member: ' + err.message)
+    }
+  }
+
+  const handleCreateEvent = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/api/clubs/${clubId}/trips`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...eventForm,
+          capacity: eventForm.capacity ? parseInt(eventForm.capacity) : undefined
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to create event')
+      
+      setShowEventModal(false)
+      setEventForm({ name: '', description: '', startDate: '', endDate: '', location: '', capacity: '' })
+      fetchEvents()
+      alert('Event created successfully!')
+    } catch (err: any) {
+      alert('Error creating event: ' + err.message)
+    }
+  }
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm('Are you sure you want to delete this event?')) return
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/api/clubs/${clubId}/trips/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) throw new Error('Failed to delete event')
+      
+      fetchEvents()
+      alert('Event deleted successfully!')
+    } catch (err: any) {
+      alert('Error deleting event: ' + err.message)
+    }
+  }
+
+  const handleCreateAnnouncement = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/api/clubs/${clubId}/announcements`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(announcementForm)
+      })
+
+      if (!response.ok) throw new Error('Failed to create announcement')
+      
+      setShowAnnouncementModal(false)
+      setAnnouncementForm({ title: '', content: '', type: 'announcement' })
+      fetchAnnouncements()
+      alert('Announcement created successfully!')
+    } catch (err: any) {
+      alert('Error creating announcement: ' + err.message)
+    }
+  }
+
+  const handleDeleteAnnouncement = async (announcementId: string) => {
+    if (!confirm('Are you sure you want to delete this announcement?')) return
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/api/clubs/${clubId}/announcements/${announcementId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) throw new Error('Failed to delete announcement')
+      
+      fetchAnnouncements()
+      alert('Announcement deleted successfully!')
+    } catch (err: any) {
+      alert('Error deleting announcement: ' + err.message)
     }
   }
 
@@ -228,12 +394,12 @@ function ClubManage() {
                   </StatCard>
                   <StatCard>
                     <StatIcon><Calendar size={24} /></StatIcon>
-                    <StatValue>0</StatValue>
+                    <StatValue>{events.length}</StatValue>
                     <StatLabel>Upcoming Events</StatLabel>
                   </StatCard>
                   <StatCard>
                     <StatIcon><MessageSquare size={24} /></StatIcon>
-                    <StatValue>0</StatValue>
+                    <StatValue>{announcements.length}</StatValue>
                     <StatLabel>Announcements</StatLabel>
                   </StatCard>
                   <StatCard>
@@ -329,16 +495,46 @@ function ClubManage() {
               >
                 <SectionHeader>
                   <SectionTitle>Events</SectionTitle>
-                  <AddButton>
+                  <AddButton onClick={() => setShowEventModal(true)}>
                     <Plus size={16} />
                     Create Event
                   </AddButton>
                 </SectionHeader>
-                <EmptyState>
-                  <Calendar size={48} />
-                  <EmptyText>No events yet</EmptyText>
-                  <EmptySubtext>Create your first event to get started</EmptySubtext>
-                </EmptyState>
+                {events.length === 0 ? (
+                  <EmptyState>
+                    <Calendar size={48} />
+                    <EmptyText>No events yet</EmptyText>
+                    <EmptySubtext>Create your first event to get started</EmptySubtext>
+                  </EmptyState>
+                ) : (
+                  <EventsList>
+                    {events.map((event) => (
+                      <EventCard key={event._id}>
+                        <EventHeader>
+                          <EventTitle>{event.name}</EventTitle>
+                          <DeleteButton onClick={() => handleDeleteEvent(event._id)}>
+                            <Trash2 size={16} />
+                          </DeleteButton>
+                        </EventHeader>
+                        <EventDescription>{event.description}</EventDescription>
+                        <EventMeta>
+                          <EventMetaItem>
+                            <Calendar size={14} />
+                            {new Date(event.startDate).toLocaleDateString()}
+                          </EventMetaItem>
+                          <EventMetaItem>
+                            <MapPin size={14} />
+                            {event.location}
+                          </EventMetaItem>
+                          <EventMetaItem>
+                            <Users size={14} />
+                            {event.signups?.length || 0} signed up
+                          </EventMetaItem>
+                        </EventMeta>
+                      </EventCard>
+                    ))}
+                  </EventsList>
+                )}
               </TabContent>
             )}
 
@@ -350,16 +546,38 @@ function ClubManage() {
               >
                 <SectionHeader>
                   <SectionTitle>Announcements</SectionTitle>
-                  <AddButton>
+                  <AddButton onClick={() => setShowAnnouncementModal(true)}>
                     <Plus size={16} />
                     New Announcement
                   </AddButton>
                 </SectionHeader>
-                <EmptyState>
-                  <MessageSquare size={48} />
-                  <EmptyText>No announcements yet</EmptyText>
-                  <EmptySubtext>Create announcements to keep members informed</EmptySubtext>
-                </EmptyState>
+                {announcements.length === 0 ? (
+                  <EmptyState>
+                    <MessageSquare size={48} />
+                    <EmptyText>No announcements yet</EmptyText>
+                    <EmptySubtext>Create announcements to keep members informed</EmptySubtext>
+                  </EmptyState>
+                ) : (
+                  <AnnouncementsList>
+                    {announcements.map((announcement) => (
+                      <AnnouncementCard key={announcement._id}>
+                        <AnnouncementHeader>
+                          <div>
+                            <AnnouncementTitle>{announcement.title}</AnnouncementTitle>
+                            <AnnouncementMeta>
+                              By {announcement.announcerName} • {new Date(announcement.createdAt).toLocaleDateString()}
+                            </AnnouncementMeta>
+                          </div>
+                          <DeleteButton onClick={() => handleDeleteAnnouncement(announcement._id)}>
+                            <Trash2 size={16} />
+                          </DeleteButton>
+                        </AnnouncementHeader>
+                        <AnnouncementContent>{announcement.content}</AnnouncementContent>
+                        {announcement.isPinned && <PinnedBadge>Pinned</PinnedBadge>}
+                      </AnnouncementCard>
+                    ))}
+                  </AnnouncementsList>
+                )}
               </TabContent>
             )}
 
@@ -419,6 +637,126 @@ function ClubManage() {
           </ContentCard>
         </ContentWrapper>
       </MainContent>
+
+      {/* Event Modal */}
+      {showEventModal && (
+        <Modal onClick={() => setShowEventModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>Create New Event</ModalTitle>
+              <CloseButton onClick={() => setShowEventModal(false)}>
+                <X size={20} />
+              </CloseButton>
+            </ModalHeader>
+            <ModalBody>
+              <FormGroup>
+                <Label>Event Name</Label>
+                <Input
+                  value={eventForm.name}
+                  onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })}
+                  placeholder="e.g., Annual Gala"
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label>Description</Label>
+                <TextArea
+                  value={eventForm.description}
+                  onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                  placeholder="Describe the event..."
+                  rows={3}
+                />
+              </FormGroup>
+              <FormRow>
+                <FormGroup>
+                  <Label>Start Date</Label>
+                  <Input
+                    type="datetime-local"
+                    value={eventForm.startDate}
+                    onChange={(e) => setEventForm({ ...eventForm, startDate: e.target.value })}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label>End Date</Label>
+                  <Input
+                    type="datetime-local"
+                    value={eventForm.endDate}
+                    onChange={(e) => setEventForm({ ...eventForm, endDate: e.target.value })}
+                  />
+                </FormGroup>
+              </FormRow>
+              <FormGroup>
+                <Label>Location</Label>
+                <Input
+                  value={eventForm.location}
+                  onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                  placeholder="e.g., Main Auditorium"
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label>Capacity (optional)</Label>
+                <Input
+                  type="number"
+                  value={eventForm.capacity}
+                  onChange={(e) => setEventForm({ ...eventForm, capacity: e.target.value })}
+                  placeholder="Maximum attendees"
+                />
+              </FormGroup>
+            </ModalBody>
+            <ModalFooter>
+              <CancelButton onClick={() => setShowEventModal(false)}>Cancel</CancelButton>
+              <SubmitButton onClick={handleCreateEvent}>Create Event</SubmitButton>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {/* Announcement Modal */}
+      {showAnnouncementModal && (
+        <Modal onClick={() => setShowAnnouncementModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>New Announcement</ModalTitle>
+              <CloseButton onClick={() => setShowAnnouncementModal(false)}>
+                <X size={20} />
+              </CloseButton>
+            </ModalHeader>
+            <ModalBody>
+              <FormGroup>
+                <Label>Title</Label>
+                <Input
+                  value={announcementForm.title}
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
+                  placeholder="Announcement title"
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label>Content</Label>
+                <TextArea
+                  value={announcementForm.content}
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, content: e.target.value })}
+                  placeholder="Write your announcement..."
+                  rows={5}
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label>Type</Label>
+                <Select
+                  value={announcementForm.type}
+                  onChange={(e) => setAnnouncementForm({ ...announcementForm, type: e.target.value as any })}
+                >
+                  <option value="announcement">Announcement</option>
+                  <option value="poll">Poll</option>
+                  <option value="form">Form</option>
+                </Select>
+              </FormGroup>
+            </ModalBody>
+            <ModalFooter>
+              <CancelButton onClick={() => setShowAnnouncementModal(false)}>Cancel</CancelButton>
+              <SubmitButton onClick={handleCreateAnnouncement}>Post Announcement</SubmitButton>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
     </PageContainer>
   )
 }
@@ -931,6 +1269,234 @@ const ErrorContainer = styled.div`
   min-height: 400px;
   color: rgba(255, 255, 255, 0.6);
   gap: 1rem;
+`
+
+const EventsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+`
+
+const EventCard = styled.div`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+`
+
+const EventHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+`
+
+const EventTitle = styled.h3`
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+`
+
+const EventDescription = styled.p`
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+`
+
+const EventMeta = styled.div`
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+`
+
+const EventMetaItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+
+  svg {
+    color: rgba(139, 92, 246, 0.8);
+  }
+`
+
+const AnnouncementsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+`
+
+const AnnouncementCard = styled.div`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  position: relative;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+`
+
+const AnnouncementHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+`
+
+const AnnouncementTitle = styled.h3`
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+`
+
+const AnnouncementMeta = styled.div`
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+`
+
+const AnnouncementContent = styled.p`
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0;
+`
+
+const PinnedBadge = styled.div`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(139, 92, 246, 0.2);
+  color: rgba(168, 85, 247, 1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+`
+
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+`
+
+const ModalContent = styled.div`
+  background: rgba(20, 24, 45, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+`
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+`
+
+const ModalTitle = styled.h2`
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+`
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.9);
+  }
+`
+
+const ModalBody = styled.div`
+  padding: 1.5rem;
+`
+
+const ModalFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+`
+
+const FormRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+`
+
+const CancelButton = styled.button`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
+  }
+`
+
+const SubmitButton = styled.button`
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  }
 `
 
 export default ClubManage

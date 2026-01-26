@@ -16,6 +16,9 @@ import Events from './pages/Events'
 import Messages from './pages/Messages'
 import Profile from './pages/Profile'
 import Status from './pages/Status'
+import Help from './pages/Help'
+import TicketDetail from './pages/TicketDetail'
+import AdminDashboard from './pages/AdminDashboard'
 import './App.css'
 
 interface RouteProps {
@@ -134,6 +137,21 @@ function App() {
             <ProtectedRoute>
               <Profile />
             </ProtectedRoute>
+          } />
+          <Route path="/help" element={
+            <ProtectedRoute>
+              <Help />
+            </ProtectedRoute>
+          } />
+          <Route path="/help/:id" element={
+            <ProtectedRoute>
+              <TicketDetail />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
           } />
           <Route path="/" element={<Navigate to="/home" />} />
         </Routes>
