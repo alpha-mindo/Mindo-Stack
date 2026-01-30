@@ -31,7 +31,7 @@ const authLimiter = rateLimit({
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? [process.env.CLIENT_URL || 'https://yourdomain.com'] 
-    : ['http://localhost:3000', 'https://becky-unabatable-strainingly.ngrok-free.dev'],
+    : ['http://localhost:3000', 'https://becky-unabatable-strainingly.ngrok-free.dev', 'https://h5mj61p0-3000.uks1.devtunnels.ms'],
   credentials: true,
   optionsSuccessStatus: 200
 };
