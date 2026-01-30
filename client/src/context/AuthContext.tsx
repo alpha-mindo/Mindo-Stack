@@ -35,7 +35,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const INACTIVITY_TIMEOUT = 5 * 60 * 1000 // 5 minutes in milliseconds
 
   useEffect(() => {
-    // Set axios default header if token exists
+    // Set axios default headers
+    axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true'
+    
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       // You could fetch user data here if needed
