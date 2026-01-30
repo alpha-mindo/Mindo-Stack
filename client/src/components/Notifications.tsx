@@ -30,7 +30,8 @@ function Notifications(_props: NotificationsProps = { isFixed: true }) {
       
       const response = await fetch(`${API_URL}/api/notifications/unread-count`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true'
         }
       })
       
