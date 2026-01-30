@@ -8,6 +8,9 @@ require('dotenv').config();
 
 const app = express();
 
+// Trust proxy - important for rate limiting behind proxies/tunnels like ngrok
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
