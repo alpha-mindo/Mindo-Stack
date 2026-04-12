@@ -12,6 +12,8 @@ const { validateObjectId, validateClubExists } = require('../middleware/validato
 // @desc    Create a new club
 // @access  Private (authenticated users)
 router.post('/', authMiddleware, async (req, res) => {
+  console.log(`\n📝 Creating club: "${req.body.name}" by ${req.user.email}`);
+  
   try {
     const { name, description, logo, category, tags, customRoles, applicationForm } = req.body;
 
@@ -36,6 +38,12 @@ router.post('/', authMiddleware, async (req, res) => {
       });
     }
 
+    // Prepare applicationForm - don't include if questions array is empty
+    let appForm = undefined;
+    if (applicationForm && applicationForm.questions && applicationForm.questions.length > 0) {
+      appForm = applicationForm;
+    }
+
     // Create club
     const club = await Club.create({
       name,
@@ -44,7 +52,7 @@ router.post('/', authMiddleware, async (req, res) => {
       category,
       tags: tags || [],
       customRoles: customRoles || [],
-      applicationForm: applicationForm || undefined,
+      applicationForm: appForm,
       ownerId: req.user._id,
       memberCount: 1
     });
@@ -85,7 +93,14 @@ router.post('/', authMiddleware, async (req, res) => {
       data: club
     });
   } catch (error) {
+    console.error('\n❌ Error creating club:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Error code:', error.code);
+    
     if (error.code === 11000) {
+      console.log('⚠️  Duplicate club name detected');
       return res.status(400).json({
         success: false,
         message: 'A club with this name already exists'
@@ -110,7 +125,11 @@ router.get('/', async (req, res) => {
     const query = {};
     
     if (search) {
-      query.$text = { $search: search };
+      // Use regex search as fallback if text index doesn't exist
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
     }
     
     if (category) {
@@ -125,7 +144,7 @@ router.get('/', async (req, res) => {
     // Execute query with pagination
     const clubs = await Club.find(query)
       .select('name description logo category tags memberCount createdAt')
-      .sort(search ? { score: { $meta: 'textScore' } } : { createdAt: -1 })
+      .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
@@ -141,6 +160,8 @@ router.get('/', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Error fetching clubs:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Error fetching clubs',

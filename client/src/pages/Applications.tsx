@@ -102,19 +102,19 @@ export default function Applications() {
       <Header>
         <Title>My Applications</Title>
         <FilterBar>
-          <FilterButton active={filter === 'all'} onClick={() => setFilter('all')}>
+          <FilterButton $active={filter === 'all'} onClick={() => setFilter('all')}>
             All ({applications.length})
           </FilterButton>
-          <FilterButton active={filter === 'pending'} onClick={() => setFilter('pending')}>
+          <FilterButton $active={filter === 'pending'} onClick={() => setFilter('pending')}>
             Pending ({applications.filter(a => a.status === 'pending').length})
           </FilterButton>
-          <FilterButton active={filter === 'interview'} onClick={() => setFilter('interview')}>
+          <FilterButton $active={filter === 'interview'} onClick={() => setFilter('interview')}>
             Interview ({applications.filter(a => a.status === 'interview').length})
           </FilterButton>
-          <FilterButton active={filter === 'approved'} onClick={() => setFilter('approved')}>
+          <FilterButton $active={filter === 'approved'} onClick={() => setFilter('approved')}>
             Approved ({applications.filter(a => a.status === 'approved').length})
           </FilterButton>
-          <FilterButton active={filter === 'rejected'} onClick={() => setFilter('rejected')}>
+          <FilterButton $active={filter === 'rejected'} onClick={() => setFilter('rejected')}>
             Rejected ({applications.filter(a => a.status === 'rejected').length})
           </FilterButton>
         </FilterBar>
@@ -212,18 +212,18 @@ const FilterBar = styled.div`
   flex-wrap: wrap;
 `;
 
-const FilterButton = styled.button<{ active: boolean }>`
+const FilterButton = styled.button<{ $active: boolean }>`
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid ${props => props.active ? '#3b82f6' : '#e5e7eb'};
-  background: ${props => props.active ? '#3b82f6' : 'white'};
-  color: ${props => props.active ? 'white' : '#6b7280'};
-  font-weight: ${props => props.active ? '600' : '400'};
+  border: 1px solid ${props => props.$active ? '#3b82f6' : '#e5e7eb'};
+  background: ${props => props.$active ? '#3b82f6' : 'white'};
+  color: ${props => props.$active ? 'white' : '#6b7280'};
+  font-weight: ${props => props.$active ? '600' : '400'};
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    background: ${props => props.active ? '#2563eb' : '#f9fafb'};
+    background: ${props => props.$active ? '#2563eb' : '#f9fafb'};
   }
 `;
 

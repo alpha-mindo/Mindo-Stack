@@ -1,6 +1,6 @@
 // API Configuration
 const env = import.meta.env as any
-export const API_URL = env.VITE_API_URL || 'https://becky-unabatable-strainingly.ngrok-free.dev'
+export const API_URL = env.VITE_API_URL || 'https://mindo.tail5298e0.ts.net:5000'
 
 // Custom fetch wrapper that adds ngrok bypass header
 export const apiFetch = async (url: string, options: RequestInit = {}) => {

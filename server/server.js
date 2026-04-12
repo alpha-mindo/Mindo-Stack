@@ -34,13 +34,26 @@ const authLimiter = rateLimit({
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? [process.env.CLIENT_URL || 'https://yourdomain.com'] 
-    : ['http://localhost:3000', 'https://becky-unabatable-strainingly.ngrok-free.dev', 'https://h5mj61p0-3000.uks1.devtunnels.ms'],
+    : [
+        'http://localhost:3000',
+        'https://mindo.tail5298e0.ts.net:3000',
+        'https://mindo.tail5298e0.ts.net:5000',
+        'https://h5mj61p0-3000.uks1.devtunnels.ms'
+      ],
   credentials: true,
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' })); // Limit payload size
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request logger (skip polling endpoints)
+app.use((req, res, next) => {
+  if (!req.originalUrl.includes('/unread-count') && !req.originalUrl.includes('/notifications')) {
+    console.log(`📨 ${req.method} ${req.originalUrl}`);
+  }
+  next();
+});
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

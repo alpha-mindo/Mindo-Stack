@@ -3,11 +3,20 @@ const User = require('../models/User');
 
 // Middleware to verify JWT token and attach user to request
 const authMiddleware = async (req, res, next) => {
+  // Skip verbose logging for polling endpoints
+  const isPollingEndpoint = req.originalUrl.includes('/unread-count') || 
+                            req.originalUrl.includes('/notifications');
+  
+  if (!isPollingEndpoint) {
+    console.log(`\n🔐 ${req.method} ${req.originalUrl}`);
+  }
+  
   try {
     // Get token from header
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
+      console.log('❌ No token found for:', req.originalUrl);
       return res.status(401).json({ 
         success: false, 
         message: 'No authentication token, access denied' 
@@ -21,16 +30,22 @@ const authMiddleware = async (req, res, next) => {
     const user = await User.findById(decoded.userId).select('-password');
     
     if (!user) {
+      console.log('❌ User not found in database for userId:', decoded.userId);
       return res.status(401).json({ 
         success: false, 
         message: 'Token is valid but user not found' 
       });
     }
 
+    if (!isPollingEndpoint) {
+      console.log(`✅ Authenticated: ${user.email}`);
+    }
+    
     // Attach user to request
     req.user = user;
     next();
   } catch (error) {
+    console.error('❌ Auth error:', error.message, 'for:', req.originalUrl);
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({ 
         success: false, 
